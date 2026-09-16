@@ -1,65 +1,117 @@
 #!/bin/bash
-# 每日更新脚本：拉上游 → YYB改写 → push fork → QQ通知
+# 每日更新：拉上游 → YYB改写 → push fork → 部署青龙 → QQ通知
 set -e
 
 REPO="/root/QLScriptPublic"
-FORK="https://github.com/wangixangya/QLScriptPublic.git"
-UPSTREAM="https://github.com/smallfawn/QLScriptPublic.git"
+FORK_URL="https://github.com/wangixangya/QLScriptPublic.git"
+UPSTREAM_URL="https://github.com/smallfawn/QLScriptPublic.git"
+SCRIPT_DIR="/root/yyb-go/scripts"
+DST_DIR="/root/yyb-go/scripts/yyb_wxapp"
+QL2_SCRIPTS="/root/docker/ql2/data/scripts/yyb_wxapp"
+YYB_SERVER="172.23.0.2:8000"
+QQ_TOKEN="sg_qq_token_2026"
+QQ_USER="949194446"
 
-# QQ 推送函数
+TIMESTAMP=$(date '+%Y-%m-%d %H:%M')
+LOG="/tmp/update_qlscriptpub_$(date +%Y%m%d_%H%M%S).log"
+RESULT=""
+FAILED=0
+
+log() { echo "[$TIMESTAMP] $1" | tee -a "$LOG"; }
+
 send_qq() {
     local msg="$1"
-    local result
-    result=$(curl -s -m 10 -X POST http://172.17.0.1:3000/send_private_msg \
-        -H "Authorization: Bearer sg_qq_token_2026" \
+    local payload="{\"user_id\":$QQ_USER,\"message\":{\"type\":\"text\",\"data\":{\"text\":\"$msg\"}}}"
+    curl -s -m 10 -X POST "http://127.0.0.1:3000/send_private_msg" \
         -H "Content-Type: application/json" \
-        -d "{\"user_id\":949194446,\"message\":\"$msg\"}" 2>/dev/null)
-    echo "QQ推送: $result"
+        -H "Authorization: $QQ_TOKEN" \
+        -d "$payload" >/dev/null 2>&1
 }
 
-LOG="/tmp/update_qlscriptpub_$(date +%Y%m%d_%H%M%S).log"
-
 {
-    echo "=== $(date) 开始更新 QLScriptPublic ==="
+    log "========== QLScriptPublic 更新开始 =========="
     cd "$REPO"
 
+    # 确保 upstream remote 存在
+    git remote add upstream "$UPSTREAM_URL" 2>/dev/null || true
+
     # 1. 拉取上游
-    echo "[1/5] 拉取上游 smallfawn..."
+    log "[1/6] 拉取上游..."
     git fetch upstream main 2>&1
     UPSTREAM_HEAD=$(git rev-parse upstream/main)
     LOCAL_HEAD=$(git rev-parse origin/main)
     if [ "$UPSTREAM_HEAD" = "$LOCAL_HEAD" ]; then
-        echo "  上游无更新，跳过"
-        send_qq "📋 QLScriptPublic 每日更新\n上游无新提交，跳过。"
+        log "  上游无更新，跳过"
+        send_qq "📋 QLScriptPublic 每日更新 $TIMESTAMP
+上游无新提交，跳过。"
         exit 0
     fi
     git merge upstream/main --no-edit 2>&1
-    echo "  上游已合并: $(git rev-parse --short upstream/main)"
+    log "  上游已合并: $(git rev-parse --short upstream/main)"
 
     # 2. JS 改写
-    echo "[2/5] JS 改写..."
-    python3 /root/yyb-go/scripts/rewrite_yyb_wxapp.py 2>&1 | tail -5
+    log "[2/6] JS 改写..."
+    (cd "$SCRIPT_DIR" && python3 rewrite_yyb_wxapp.py) 2>&1 | tail -5
+    if [ ${PIPESTATUS[0]} -ne 0 ]; then
+        log "  改写失败"; FAILED=1
+    fi
 
     # 3. Python 注入 YYB 兼容层
-    echo "[3/5] Python 注入 YYB 兼容层..."
-    python3 /root/yyb-go/scripts/rebuild_python3.py 2>&1 | tail -5
+    log "[3/6] Python 注入 YYB 兼容层..."
+    (cd "$SCRIPT_DIR" && python3 rebuild_python3.py) 2>&1 | tail -5
+    if [ ${PIPESTATUS[0]} -ne 0 ]; then
+        log "  Python 注入失败"; FAILED=1
+    fi
 
-    # 4. 提交并推送
-    echo "[4/5] 提交推送..."
+    JS_COUNT=$(ls "$DST_DIR"/*.js 2>/dev/null | wc -l)
+    PY_COUNT=$(ls "$DST_DIR"/*.py 2>/dev/null | wc -l)
+
+    # 4. 同步改写结果到 git 仓库
+    log "[4/6] 同步到仓库..."
+    cp -r "$DST_DIR"/* "$REPO/wxapp/" 2>/dev/null
     git add -A
     if git diff --cached --quiet; then
-        echo "  无改动"
+        log "  无改动"
     else
         git commit -m "feat: auto-update $(date +%Y-%m-%d) YYB-Go rewrite" 2>&1
         git push origin main 2>&1
+        log "  已推送至 fork"
     fi
 
-    # 5. QQ 通知
-    echo "[5/5] QQ 通知..."
-    CHANGED=$(git diff --stat HEAD~1..HEAD -- wxapp/ 2>/dev/null | tail -1)
-    send_qq "🎉 QLScriptPublic 每日更新完成\n$CHANGED\n已推送至 fork: wangxiangya/QLScriptPublic"
+    # 5. 部署到 qinglong2
+    log "[5/6] 部署到 qinglong2..."
+    rm -rf "$QL2_SCRIPTS"
+    mkdir -p "$QL2_SCRIPTS"
+    cp -r "$DST_DIR"/* "$QL2_SCRIPTS"/ 2>/dev/null
+    if [ $? -ne 0 ]; then
+        log "  部署失败"; FAILED=1
+    else
+        log "  部署完成: $JS_COUNT JS + $PY_COUNT Python"
+    fi
 
-    echo "=== 更新完成 ==="
+    # 6. 验证 YYB 连接
+    log "[6/6] 验证 YYB 连接..."
+    YYB_HEALTH=$(docker exec qinglong2 wget -qO- --timeout=5 "http://$YYB_SERVER/health" 2>/dev/null || echo "FAIL")
+    if echo "$YYB_HEALTH" | grep -q '"ok":true'; then
+        log "  qinglong2 → yyb-go 正常"
+    else
+        log "  YYB 连接失败: $YYB_HEALTH"; FAILED=1
+    fi
+
+    # QQ 通知
+    if [ $FAILED -eq 0 ]; then
+        send_qq "✅ QLScriptPublic 更新成功 $TIMESTAMP
+改写: $JS_COUNT JS + $PY_COUNT Python
+部署: qinglong2/15700
+YYB: 正常"
+    else
+        send_qq "⚠️ QLScriptPublic 更新有异常 $TIMESTAMP
+改写: $JS_COUNT JS + $PY_COUNT Python
+详见: $LOG"
+    fi
+
+    log "QQ通知已发送"
+    log "========== 更新结束 =========="
 } > "$LOG" 2>&1
 
 cat "$LOG"

@@ -242,6 +242,16 @@ if (!$.userCount) {
     }
 }
 
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
   const accounts = $.userList && $.userList.length ? $.userList : splitAccounts(process.env[ckName]);
   if (!accounts.length) {
     $.log(`未找到变量 ${ckName}`);
