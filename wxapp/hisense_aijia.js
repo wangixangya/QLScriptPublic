@@ -664,35 +664,10 @@ if (!$.userCount) {
     }
 }
 
-// === YYB-Go 兼容层 ===
-if (!$.userCount) {
-    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-    if (yybServers.length) {
-        $.userList = yybServers;
-        $.userCount = yybServers.length;
-        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
-    }
-}
 
-// === YYB-Go 兼容层 ===
-if (!$.userCount) {
-    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-    if (yybServers.length) {
-        $.userList = yybServers;
-        $.userCount = yybServers.length;
-        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
-    }
-}
 
-// === YYB-Go 兼容层 ===
-if (!$.userCount) {
-    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-    if (yybServers.length) {
-        $.userList = yybServers;
-        $.userCount = yybServers.length;
-        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
-    }
-}
+
+
 
   if (!$.userCount) {
     $.log(`未配置变量 ${ckName}`);
