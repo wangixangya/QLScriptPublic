@@ -774,8 +774,239 @@ if _yyb_accts:
 
 # === end YYB 兼容层 ===
 
+
+# === YYB-Go 兼容层 ===
+import os as _yyb_os
+import json as _yyb_json
+_YWB_SERVER = "172.23.0.2:8000"
+
+def _yyb_accounts():
+    result = []
+    for line in _yyb_os.getenv("YYB_SERVER", "").splitlines():
+        line = line.strip()
+        if not line or "@" not in line:
+            continue
+        endpoint, ref = (p.strip() for p in line.split("@", 1))
+        if endpoint and ref:
+            if not endpoint.startswith(("http://", "https://")):
+                endpoint = "http://" + endpoint
+            result.append(endpoint.rstrip("/") + "@" + ref)
+    return result
+
+def _yyb_parts(server):
+    v = str(server).strip()
+    if "@" not in v:
+        return v.rstrip("/"), ""
+    return v.rsplit("@", 1)[0].rstrip("/"), v.rsplit("@", 1)[1]
+
+def _yyb_appid(args, kwargs):
+    a = kwargs.get("appid") or kwargs.get("app_id")
+    if not a:
+        a = globals().get("APPID") or globals().get("APP_ID") or globals().get("MINI_APP_ID")
+        if not a:
+            for k in dir():
+                if isinstance(k, str) and "APPID" in k.upper() and k.isupper():
+                    a = globals().get(k, "")
+                    break
+    if isinstance(a, (list, tuple)):
+        a = a[0] if a else ""
+    return str(a) if a else ""
+
+def _yyb_json_req(server, path, appid, payload=None):
+    import requests
+    ep, ref = _yyb_parts(server)
+    if not ep or not ref or not appid:
+        raise RuntimeError("YYB 参数不完整")
+    h = {}
+    k = _yyb_os.getenv("YYB_API_KEY", "").strip()
+    if k:
+        h["Authorization"] = "Bearer " + k
+    b = {"ref": ref, "app_id": str(appid)}
+    if payload:
+        b.update(payload)
+    r = requests.post(ep + path, json=b, headers=h, timeout=30)
+    try:
+        b = r.json()
+    except ValueError as e:
+        raise RuntimeError("YYB 返回非 JSON") from e
+    if r.status_code >= 400:
+        raise RuntimeError(str(b.get("message") or b.get("msg") or b))
+    return b
+
+def _yyb_find_code(v):
+    if isinstance(v, dict):
+        c = v.get("code")
+        if isinstance(c, str) and c not in ("", "null", "invalid"):
+            return c
+        for ch in v.values():
+            f = _yyb_find_code(ch)
+            if f:
+                return f
+    elif isinstance(v, list):
+        for ch in v:
+            f = _yyb_find_code(ch)
+            if f:
+                return f
+    return None
+
+def _yyb_get_code(server, *args, **kwargs):
+    b = _yyb_json_req(server, "/wxapp/getCode", _yyb_appid(args, kwargs))
+    c = _yyb_find_code(b)
+    if not c:
+        raise RuntimeError(str(b.get("msg") or b.get("message") or "YYB 未返回 code"))
+    return str(c)
+
+# 包装原取码函数
+for _fn in ("get_wx_code", "get_code", "smallcat"):
+    if _fn in globals():
+        _orig = globals()[_fn]
+
+        def _make_wrapper(orig):
+            def wrapper(server, *args, **kwargs):
+                if "@" in str(server):
+                    return _yyb_get_code(server, *args, **kwargs)
+                return orig(server, *args, **kwargs)
+            return wrapper
+
+        globals()[_fn] = _make_wrapper(_orig)
+
+# 注入账号到环境变量
+_yyb_accts = _yyb_accounts()
+if _yyb_accts:
+    _yyb_os.environ["hshj"] = "\n".join(_yyb_accts)
+
+# === end YYB 兼容层 ===
+
 if __name__ == "__main__":
     main()
+
+
+# ============================================================
+# YYB-Go 兼容层 (auto-appended)
+# ============================================================
+import os as _yyb_os
+import json as _yyb_json
+
+_YWB_SERVER = "172.23.0.2:8000"
+
+def _yyb_accounts():
+    result = []
+    for line in _yyb_os.getenv("YYB_SERVER", "").splitlines():
+        line = line.strip()
+        if not line or "@" not in line or line == "[object Object]":
+            continue
+        endpoint, ref = (part.strip() for part in line.split("@", 1))
+        if endpoint and ref:
+            if not endpoint.startswith(("http://", "https://")):
+                endpoint = "http://" + endpoint
+            result.append(endpoint.rstrip("/") + "@" + ref)
+    return result
+
+def _yyb_parts(server):
+    value = str(server).strip()
+    if "@" not in value:
+        return value.rstrip("/"), ""
+    return value.rsplit("@", 1)[0].rstrip("/"), value.rsplit("@", 1)[1]
+
+def _yyb_appid(args, kwargs):
+    appid = kwargs.get("appid") or kwargs.get("app_id")
+    if not appid and args and isinstance(args[0], str):
+        appid = args[0]
+    if not appid:
+        appid = globals().get("APPID") or globals().get("APP_ID") or ""
+    if isinstance(appid, (list, tuple)):
+        appid = appid[0] if appid else ""
+    return str(appid)
+
+def _yyb_json_request(server, path, appid, payload=None):
+    import requests
+    endpoint, ref = _yyb_parts(server)
+    if not endpoint or not ref or not appid:
+        raise RuntimeError("YYB 参数不完整：需要 地址@账号ID 和 app_id")
+    headers = {}
+    api_key = _yyb_os.getenv("YYB_API_KEY", "").strip()
+    if api_key:
+        headers["Authorization"] = "Bearer " + api_key
+    body = {"ref": ref, "app_id": str(appid)}
+    if payload:
+        body.update(payload)
+    response = requests.post(
+        endpoint + path,
+        json=body,
+        headers=headers,
+        timeout=30,
+    )
+    try:
+        body = response.json()
+    except ValueError as exc:
+        raise RuntimeError("YYB 返回非 JSON") from exc
+    if response.status_code >= 400:
+        raise RuntimeError(str(body.get("message") or body.get("msg") or body))
+    return body
+
+def _yyb_find_code(value):
+    if isinstance(value, dict):
+        if value.get("code") not in (None, "", "null", "invalid") and isinstance(value.get("code"), str):
+            return value["code"]
+        for child in value.values():
+            found = _yyb_find_code(child)
+            if found:
+                return found
+    elif isinstance(value, list):
+        for child in value:
+            found = _yyb_find_code(child)
+            if found:
+                return found
+    return None
+
+def _yyb_code(server, *args, **kwargs):
+    body = _yyb_json_request(server, "/wxapp/getCode", _yyb_appid(args, kwargs))
+    code = _yyb_find_code(body)
+    if not code:
+        raise RuntimeError(str(body.get("msg") or body.get("message") or "YYB 未返回 wx.login code"))
+    return str(code)
+
+def _yyb_phone(server, *args, **kwargs):
+    body = _yyb_json_request(server, "/wxapp/getPhoneNumber", _yyb_appid(args, kwargs))
+    return body.get("result") or body.get("data") or body
+
+# 自动替换原取码函数
+if "get_wx_code" in globals():
+    _yyb_original_get_wx_code = get_wx_code
+    
+    def get_wx_code(server, *args, **kwargs):
+        if "@" in str(server):
+            return _yyb_code(server, *args, **kwargs)
+        return _yyb_original_get_wx_code(server, *args, **kwargs)
+
+if "get_code" in globals() and "get_wx_code" not in globals():
+    _yyb_original_get_code = get_code
+    
+    def get_code(server, *args, **kwargs):
+        if "@" in str(server):
+            return _yyb_code(server, *args, **kwargs)
+        return _yyb_original_get_code(server, *args, **kwargs)
+
+if "smallcat" in globals():
+    _yyb_original_smallcat = smallcat
+    
+    def smallcat(server, *args, **kwargs):
+        if "@" in str(server):
+            return _yyb_code(server, *args, **kwargs)
+        return _yyb_original_smallcat(server, *args, **kwargs)
+
+# 替换 main 中的账号加载
+if "main" in globals():
+    _yyb_original_main = main
+    
+    def main():
+        yyb_accts = _yyb_accounts()
+        if yyb_accts:
+            for line in yyb_accts:
+                print("YYB-Go 账号: " + line)
+        return _yyb_original_main()
+
+# === end YYB compatibility layer ===
 
 
 # ============================================================
