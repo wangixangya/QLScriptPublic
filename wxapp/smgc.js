@@ -286,6 +286,16 @@ if (!$.userCount) {
     }
 }
 
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
     if (!$.userCount) { $.log(`未找到变量 ${ckName}`); return; }
     $.log(`本次将处理 ${ACTIVE_MALLS.length} 个SM广场：${ACTIVE_MALLS.map((m) => m.name).join("、")}`);
     for (let i = 0; i < $.userList.length; i++) {
