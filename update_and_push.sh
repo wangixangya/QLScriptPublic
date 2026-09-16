@@ -89,6 +89,13 @@ send_qq() {
         log "  部署完成: $JS_COUNT JS + $PY_COUNT Python"
     fi
 
+    # 5b. 部署 tools 目录（env.js + sendNotify.js）
+    QL2_TOOLS="/root/docker/ql2/data/scripts/tools"
+    mkdir -p "$QL2_TOOLS"
+    cp "$DST_DIR"/env.js "$QL2_TOOLS"/ 2>/dev/null
+    cp "$DST_DIR"/sendNotify.js "$QL2_TOOLS"/ 2>/dev/null
+    log "  tools 部署完成"
+
     # 6. 验证 YYB 连接
     log "[6/6] 验证 YYB 连接..."
     YYB_HEALTH=$(docker exec qinglong2 wget -qO- --timeout=5 "http://$YYB_SERVER/health" 2>/dev/null || echo "FAIL")
