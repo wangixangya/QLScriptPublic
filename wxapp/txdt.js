@@ -12,7 +12,7 @@ cron: 18 8 * * *
 {"openid":"xxx"}
 
 依赖变量：
-wx_server_url  默认 http://192.168.31.196:8787
+wx_server_url  默认 http://172.23.0.2:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
@@ -24,7 +24,7 @@ const crypto = require("crypto");
 
 const CK_NAME = "txdt";
 const APP = { name: "腾讯地图", appid: "wx7643d5f831302ab0", version: 545 };
-const WX_SERVER_URL = (process.env.wx_server_url || "http://192.168.31.196:8787").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const MINI_LOGIN_BASE = "https://miniapp.map.qq.com";
 const MAP_BASE = "https://mmapgwh.map.qq.com";

@@ -118,7 +118,7 @@ const SUCCESS_CODES = new Set(["200", "40003"]);
 const CODE_SESSION_EXPIRED = "40001";
 
 const wechat = new WeChatServer({
-    url: WX_SERVER_URL || "http://192.168.31.196:8787",
+    url: WX_SERVER_URL || "http://172.23.0.2:8000",
     appid: MINI_APP_ID,
     auth: process.env.wx_auth || "",
 });
@@ -656,6 +656,16 @@ class Task {
 
 !(async () => {
     $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
     if (!$.userCount) {
         $.log(`未找到变量【${ckName}】：填 wx_server 里的 openid，多账号用 & 或换行`);
         return;

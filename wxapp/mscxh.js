@@ -7,7 +7,7 @@ cron: 28 9 * * *
 变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行分隔（可加 #备注）
 
 依赖变量：
-wx_server_url  默认 http://192.168.31.196:8787
+wx_server_url  默认 http://172.23.0.2:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 契约（appid wxd96d7e6249780c6a，host petcare-consumer.marschina.com）：
@@ -50,7 +50,7 @@ const UA =
     "MicroMessenger/8.0.48.2580(0x28003036) WeChat/arm64 Weixin NetType/WIFI Language/zh_CN ABI/arm64 MiniProgramEnv/android";
 
 const wechat = new WeChatServer({
-    url: process.env.wx_server_url || "http://192.168.31.196:8787",
+    url: process.env.wx_server_url || "http://172.23.0.2:8000",
     appid: MINI_APP_ID,
     auth: process.env.wx_auth || "",
 });
@@ -215,6 +215,16 @@ class Task {
 
 !(async () => {
     $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
     if (!$.userCount) { $.log(`未找到变量 ${ckName}`); return; }
     for (let i = 0; i < $.userList.length; i++) {
         await new Task($.userList[i]).run();

@@ -45,7 +45,7 @@ const USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MicroMessenger/3.9.12 MiniProgramEnv/Windows WindowsWechat/WMPF";
 
 const ckName = "camel";
-const WX_SERVER_URL = (process.env.wx_server_url || "http://192.168.31.196:8787").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 
 function short(value, max = 200) {
@@ -365,6 +365,16 @@ class Task {
 
 !(async () => {
     $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
     if (!$.userCount) {
         $.log(`未找到变量 ${ckName}`);
         return;

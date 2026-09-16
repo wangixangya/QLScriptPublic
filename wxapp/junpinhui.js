@@ -60,13 +60,13 @@ const MAIN_BASE = "https://xcx.exijiu.com/anti-channeling/public/index.php/api/v
 const TOKEN_CACHE_FILE = path.join(__dirname, "junpinhui_token_cache.json");
 
 const wechat = new WeChatServer({
-  url: process.env.wx_server_url || "http://192.168.31.196:8787",
+  url: process.env.wx_server_url || "http://172.23.0.2:8000",
   appid: MINI_APP_ID,
   auth: process.env.wx_auth || "your-api-key",
 });
 // garden 侧要用习酒 appid 取 code / 取加密密钥
 const gardenWechat = new WeChatServer({
-  url: process.env.wx_server_url || "http://192.168.31.196:8787",
+  url: process.env.wx_server_url || "http://172.23.0.2:8000",
   appid: GARDEN_APP_ID,
   auth: process.env.wx_auth || "your-api-key",
 });
@@ -733,6 +733,16 @@ class Task {
 
 !(async () => {
   $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
   if (!$.userCount) return;
   for (const account of $.userList) {
     try {

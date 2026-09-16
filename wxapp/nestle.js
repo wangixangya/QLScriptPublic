@@ -9,7 +9,7 @@ cron: 20 8 * * *
 变量值：wx_server 里的 openid，多账号用 & 或换行
 
 依赖变量：
-wx_server_url  默认 http://192.168.31.196:8787
+wx_server_url  默认 http://172.23.0.2:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
@@ -23,7 +23,7 @@ const path = require("path");
 const CK_NAME = "nestle";
 const APP = { name: "雀巢会员俱乐部", appid: "wxc5db704249c9bb31" };
 const API_BASE = "https://crm.nestlechinese.com/openapi/";
-const WX_SERVER_URL = (process.env.wx_server_url || "http://192.168.31.196:8787").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const TOKEN_CACHE_FILE = path.join(__dirname, "nestle_token_cache.json");
 const USER_AGENT =

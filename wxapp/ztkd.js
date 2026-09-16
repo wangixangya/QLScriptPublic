@@ -14,7 +14,7 @@ cron: 20 8 * * *
 3. {"token":"xxx","openId":"xxx"}
 
 依赖变量：
-wx_server_url  默认 http://192.168.31.196:8787
+wx_server_url  默认 http://172.23.0.2:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
@@ -25,7 +25,7 @@ const axios = require("axios");
 
 const CK_NAME = "ztkd";
 const APP = { name: "中通快递", appid: "wx7ddec43d9d27276a", version: 670 };
-const WX_SERVER_URL = (process.env.wx_server_url || "http://192.168.31.196:8787").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const MAIN_HOST = "https://hdgateway.zto.com/";
 const MEMBER_HOST = "https://membergateway.zto.com/";

@@ -9,7 +9,7 @@ cron: 10 9 * * *
 变量值：wx_server 已保存账号 openid，多账号用 & 或换行
 
 必需变量：
-wx_server_url       默认 http://192.168.31.196:8787
+wx_server_url       默认 http://172.23.0.2:8000
 wx_auth             wx_server 鉴权值
 
 可选变量：
@@ -28,7 +28,7 @@ const axios = require("axios");
 const $ = new Env("腾讯电脑管家登录");
 
 const CK_NAME = "qqpcmgr";
-const WX_SERVER_URL = (process.env.wx_server_url || "http://192.168.31.196:8787").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const QRCONNECT_URL =
     process.env.qqpcmgr_qrconnect_url ||

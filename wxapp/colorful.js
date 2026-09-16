@@ -68,7 +68,7 @@ const EP_SIGN = "/api/User/SignV2"; // POST 无 body
 const SUCCESS_CODES = new Set([0, 52001, 52002, 50001, 51001, 51002, 40100, 40101]);
 
 const wechat = new WeChatServer({
-    url: WX_SERVER_URL || "http://192.168.31.196:8787",
+    url: WX_SERVER_URL || "http://172.23.0.2:8000",
     appid: MINI_APP_ID,
     auth: process.env.wx_auth || "",
 });
@@ -284,7 +284,7 @@ class Task {
         if (endpoint === "/wx/code") {
             ({ data } = await wechat.getCode(this.accountId));
         } else {
-            const url = (WX_SERVER_URL || "http://192.168.31.196:8787").replace(/\/+$/, "") + endpoint;
+            const url = (WX_SERVER_URL || "http://172.23.0.2:8000").replace(/\/+$/, "") + endpoint;
             ({ data } = await axios.post(
                 url,
                 { appid: MINI_APP_ID, openid: this.accountId },
@@ -398,6 +398,16 @@ class Task {
 !(async () => {
     await getNotice();
     $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
 
     for (const user of $.userList) {
         await new Task(user).run();

@@ -18,7 +18,7 @@ const axios = require("axios");
 const ckName = "huazhu";
 const MINI_APP_ID = "wx286efc12868f2559";
 const PACKAGE_VERSION = "580";
-const WX_SERVER_URL = (process.env.wx_server_url || "http://192.168.31.196:8787").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const LOGIN_BASE = "https://hweb-minilogin.huazhu.com/api";
 const PERSONAL_BASE = "https://hweb-personalcenter.huazhu.com";
@@ -232,6 +232,16 @@ class Huazhu {
 
 async function main() {
   $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
   const accounts = $.userList && $.userList.length ? $.userList : splitAccounts(process.env[ckName]);
   if (!accounts.length) {
     $.log(`未找到变量 ${ckName}`);

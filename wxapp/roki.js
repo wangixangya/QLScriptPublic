@@ -9,7 +9,7 @@ cron: 30 8 * * *
 变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行
 
 依赖变量：
-wx_server_url  默认 http://192.168.31.196:8787
+wx_server_url  默认 http://172.23.0.2:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
@@ -36,7 +36,7 @@ const USER_AGENT =
 let ckName = "roki";
 
 const wechat = new WeChatServer({
-    url: process.env.wx_server_url || "http://192.168.31.196:8787",
+    url: process.env.wx_server_url || "http://172.23.0.2:8000",
     appid: MINI_APP_ID,
     auth: process.env.wx_auth || "",
 });
@@ -307,6 +307,16 @@ class Task {
 
 !(async () => {
     $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
     for (const account of $.userList) {
         await new Task(account).run();
     }

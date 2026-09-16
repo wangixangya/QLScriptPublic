@@ -11,7 +11,7 @@ cron: 45 8 * * *
 也兼容原单脚本变量名：ykb、lqcwyl、ayldf 等
 
 依赖变量：
-wx_server_url  默认 http://192.168.31.196:8787
+wx_server_url  默认 http://172.23.0.2:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
@@ -229,7 +229,7 @@ class Task {
             sign: "未执行",
         };
         this.wechat = new WeChatServer({
-            url: process.env.wx_server_url || "http://192.168.31.196:8787",
+            url: process.env.wx_server_url || "http://172.23.0.2:8000",
             appid: app.appid,
             auth: process.env.wx_auth || "",
         });

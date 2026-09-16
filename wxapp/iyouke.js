@@ -11,7 +11,7 @@ cron: 39 8 * * *
        例：owNAX6vp****#wx00796053aa93af0c#KSOEUR
 
 依赖变量：
-wx_server_url  默认 http://192.168.31.196:8787
+wx_server_url  默认 http://172.23.0.2:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 契约（host smp-api.iyouke.com，所有路径都带 /dtapi 前缀）：
@@ -100,7 +100,7 @@ class Task {
         this.token = "";
         this.unbound = false;
         this.wechat = new WeChatServer({
-            url: process.env.wx_server_url || "http://192.168.31.196:8787",
+            url: process.env.wx_server_url || "http://172.23.0.2:8000",
             appid: this.account.appid,
             auth: process.env.wx_auth || "",
         });
@@ -271,6 +271,16 @@ class Task {
 
 !(async () => {
     $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
     if (!$.userCount) {
         $.log(`未找到变量 ${ckName}`);
         return;

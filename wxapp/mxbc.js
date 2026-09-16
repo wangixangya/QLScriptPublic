@@ -34,7 +34,7 @@ const API_BASE = "https://mxsa.mxbc.net/api";
 const APP_VERSION = "2.8.28";
 const TOKEN_CACHE_FILE = path.join(__dirname, "mxbc_token_cache.json");
 let wechat = new WeChatServer({
-    url: process.env.wx_server_url || 'http://192.168.31.196:8787',
+    url: process.env.wx_server_url || 'http://172.23.0.2:8000',
     appid: MINI_APP_ID,
     auth: process.env.wx_auth || "your-api-key",
 
@@ -450,6 +450,16 @@ dOGyw/X4SFyodv8AEloqd81yGg==
 !(async () => {
     await getNotice()
     $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
 
     for (let user of $.userList) {
         await new Task(user).run();

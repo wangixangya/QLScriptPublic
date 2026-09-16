@@ -7,7 +7,7 @@ cron: 41 8 * * *
 变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行分隔（可加 #备注）
 
 依赖变量：
-wx_server_url  默认 http://192.168.31.196:8787
+wx_server_url  默认 http://172.23.0.2:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 契约（appid wx250394ab3f680bfa，host api.qiumeiapp.com；迁移自 YYB-GO 系脚本，原脚本已 code 登录）：
@@ -36,7 +36,7 @@ const WeChatServer = require("./wcs.js");
 
 const ckName = "wrn";
 const MINI_APP_ID = "wx250394ab3f680bfa";
-const WX_SERVER_URL = process.env.wx_server_url || "http://192.168.31.196:8787";
+const WX_SERVER_URL = process.env.wx_server_url || "http://172.23.0.2:8000";
 const WX_AUTH = process.env.wx_auth || "";
 
 const GETOPENID_URL = "https://zhls.qq.com/wxlogin/getOpenId";
@@ -189,6 +189,16 @@ class Task {
 
 !(async () => {
     $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
     if (!$.userCount) { $.log(`未找到变量 ${ckName}`); return; }
     for (let i = 0; i < $.userList.length; i++) {
         await new Task($.userList[i]).run();

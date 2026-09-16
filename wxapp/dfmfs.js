@@ -7,7 +7,7 @@ cron: 12 9 * * *
 变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行分隔（可加 #备注）
 
 依赖变量：
-wx_server_url  默认 http://192.168.31.196:8787
+wx_server_url  默认 http://172.23.0.2:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 契约（appid wx444ddc3d46767f9d，host api.dfmeifeng.com）：
@@ -49,7 +49,7 @@ const EP_GET_INFO = "/wechat/miniapp/member/getInfo";
 const EP_SIGN_INFO = "/wechat/miniapp/signin/getSignInfo";
 const EP_SIGN_IN = "/wechat/miniapp/signin/signIn";
 
-const WX_SERVER_URL = process.env.wx_server_url || "http://192.168.31.196:8787";
+const WX_SERVER_URL = process.env.wx_server_url || "http://172.23.0.2:8000";
 const WX_AUTH = process.env.wx_auth || "";
 
 const wechat = new WeChatServer({ url: WX_SERVER_URL, appid: MINI_APP_ID, auth: WX_AUTH });
@@ -216,6 +216,16 @@ class Task {
 
 !(async () => {
     $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
     if (!$.userCount) { $.log(`未找到变量 ${ckName}`); return; }
     for (let i = 0; i < $.userList.length; i++) {
         await new Task($.userList[i]).run();

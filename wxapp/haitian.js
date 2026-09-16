@@ -54,7 +54,7 @@ const TOKEN_CACHE_FILE = path.join(__dirname, "haitian_token_cache.json");
 // 手机号授权开关：默认开启(1)。海天的登录接口只吃手机号授权的加密数据，
 // 不想授权就置 0，然后自行抓包按 authorization#uuid 填变量。
 const PHONE_LOGIN = !/^(0|false|no|off)$/i.test(String(process.env.haitian_phone_login ?? "1"));
-const WX_SERVER_URL = (process.env.wx_server_url || "http://192.168.31.196:8787").replace(/\/+$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/+$/, "");
 const defaultUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 16_7_15 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.70(0x1800462d) NetType/WIFI Language/zh_CN";
 
 function readTokenCache() {
@@ -567,6 +567,16 @@ class Task {
 !(async () => {
     await getNotice();
     $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
     for (const user of $.userList) {
         await new Task(user).run();
     }

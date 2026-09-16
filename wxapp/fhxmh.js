@@ -19,7 +19,7 @@ const CK_NAME = "fhxmh";
 const APP = { name: "飞鹤星妈会", appid: "wxc83b55d61c7fc51d" };
 // 服务端业务成功码（签到成功时返回 code=000000 且 success=true）
 const OK_CODES = ["00000", "000000", "A00002"];
-const WX_SERVER_URL = (process.env.wx_server_url || "http://192.168.31.196:8787").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const DEFAULT_OPENID = process.env.wx_openid || "";
 const USER_AGENT =

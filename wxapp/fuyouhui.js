@@ -27,7 +27,7 @@ const SIGN_SALT = "3d83f7d9";
 const TOKEN_CACHE_FILE = path.join(__dirname, "fuyouhui_token_cache.json");
 
 const wechat = new WeChatServer({
-  url: process.env.wx_server_url || "http://192.168.31.196:8787",
+  url: process.env.wx_server_url || "http://172.23.0.2:8000",
   appid: MINI_APP_ID,
   auth: process.env.wx_auth || "your-api-key",
 });
@@ -383,6 +383,16 @@ class Task {
 
 !(async () => {
   $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
   if (!$.userCount) return;
   for (const account of $.userList) {
     try {

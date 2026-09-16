@@ -177,7 +177,7 @@ class Task {
 
     async getOperateData() {
         if (!process.env.wx_auth) throw new Error("缺少 wx_auth，无法从 wx_server 获取登录数据");
-        const url = (process.env.wx_server_url || "http://192.168.31.196:8787").replace(/\/$/, "");
+        const url = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
         const { data } = await axios.post(`${url}/wx/getuserinfo`, {
             appid: MINI_APP_ID,
             openid: this.raw,
@@ -267,6 +267,16 @@ class Task {
 !(async () => {
     await getNotice();
     $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
 
     for (const user of $.userList) {
         await new Task(user).run();

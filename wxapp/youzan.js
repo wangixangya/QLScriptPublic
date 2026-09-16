@@ -13,7 +13,7 @@ cron: 15 8 * * *
           owXXXX#wx21293beab739d5c3#44353481#15129#临水玉泉
           owXXXX#wxbb5a91aacbab57f2#97827637#2163238#TOI
 
-依赖变量：wx_server_url（默认 http://192.168.31.196:8787）、wx_auth（必填）
+依赖变量：wx_server_url（默认 http://172.23.0.2:8000）、wx_auth（必填）
 ------------------------------------------
 契约（有赞统一登录，所有店同构，只有 kdtId/checkinId 不同）：
   登录  POST https://uic.youzan.com/passport/general/auth.json?kdt_id=&app_id=
@@ -45,7 +45,7 @@ const USER_AGENT =
     "Safari/537.36 MicroMessenger/7.0.20.1781(0x6700143B) NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF";
 
 const wechat = new WeChatServer({
-    url: process.env.wx_server_url || "http://192.168.31.196:8787",
+    url: process.env.wx_server_url || "http://172.23.0.2:8000",
     appid: "",
     auth: process.env.wx_auth || "",
 });
@@ -251,6 +251,16 @@ class Task {
 
 !(async () => {
     $.checkEnv(ckName);
+// === YYB-Go 兼容层 ===
+if (!$.userCount) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        $.userList = yybServers;
+        $.userCount = yybServers.length;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
+
     if (!$.userCount) {
         $.log(`未找到变量 ${ckName}`);
         return;
