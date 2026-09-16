@@ -63,6 +63,13 @@ send_qq() {
         log "  Python 注入失败"; FAILED=1
     fi
 
+    # 3b. JS 取码适配：给直接 axios.post /wx/getuserinfo 的脚本注入 YYB-Go 分支
+    log "[3b/6] JS 取码适配..."
+    (cd "$SCRIPT_DIR" && python3 patch_wx_getuserinfo_yyb.py) 2>&1 | tail -10
+    if [ ${PIPESTATUS[0]} -ne 0 ]; then
+        log "  JS 取码适配失败"; FAILED=1
+    fi
+
     JS_COUNT=$(ls "$DST_DIR"/*.js 2>/dev/null | wc -l)
     PY_COUNT=$(ls "$DST_DIR"/*.py 2>/dev/null | wc -l)
 
