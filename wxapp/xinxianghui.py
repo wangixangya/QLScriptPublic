@@ -318,8 +318,8 @@ def main():
     if not accounts:
         print("❌ 未检测到账号信息(环境变量 xxh), 退出。")
         return
-    if not WX_AUTH:
-        print("❌ 未配置 wx_auth, 无法获取 code, 退出。")
+    if not WX_AUTH and not os.getenv("YYB_SERVER"):
+        print("❌ 未配置 wx_auth, 且无 YYB_SERVER 账号, 无法获取 code, 退出。")
         return
 
     print("=============== 芯享会 签到开始 ===============")
