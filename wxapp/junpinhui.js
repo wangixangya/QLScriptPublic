@@ -38,7 +38,7 @@ cron: 45 8 * * *
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("君品荟");
 const axios = require("axios");
 const crypto = require("crypto");

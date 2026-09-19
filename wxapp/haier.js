@@ -22,7 +22,7 @@ HA_APP_ID/HA_APP_KEY 是这家小程序固定应用标识（原脚本硬编码�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("海尔智家签到");
 const axios = require("axios");
 const crypto = require("crypto");

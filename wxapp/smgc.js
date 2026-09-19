@@ -32,7 +32,7 @@ smgc_malls     可选，只跑指定城市（逗号分隔，如“成都,厦门�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("上美广场签到");
 const axios = require("axios");
 const fs = require("fs");

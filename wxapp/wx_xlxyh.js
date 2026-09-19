@@ -65,13 +65,13 @@ cron: 20 9 * * *
 7、所有直接或间接使用、查看此脚本的人均应该仔细阅读此声明。本人保留随时更改或补充此声明的权利。一旦您使用或复制了此脚本，即视为您已接受此免责声明。
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("骁龙骁友会");
 const axios = require("axios");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const WeChatServer = require("../wxapp/wcs.js");
+const WeChatServer = require("./wcs.js");
 
 const ckName = "wx_xlxyh";
 const strSplitor = "#";

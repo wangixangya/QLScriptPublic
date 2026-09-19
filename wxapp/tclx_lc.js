@@ -28,15 +28,36 @@ cron: 21 8 * * *
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("同程旅行里程签到");
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
 const CK_NAME = "tclx_lc";
 const APP = { name: "同程旅行里程签到", appid: "wx336dcaf6a1ecf632" };
 const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const DEFAULT_OPENID = process.env.wx_openid || "";
+
+const TOKEN_CACHE_FILE = path.join(__dirname, "tclx_lc_token_cache.json");
+
+function readCache() {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) return {};
+        return JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, "utf8")) || {};
+    } catch (e) { return {}; }
+}
+
+function writeCache(c) {
+    try { fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(c, null, 2), "utf8"); } catch (e) {}
+}
+
+function maskToken(t = "") {
+    if (!t) return "";
+    return t.length > 12 ? `${t.slice(0, 6)}***${t.slice(-6)}` : `${t.slice(0, 3)}***`;
+}
+
 const USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MicroMessenger/3.9.12 MiniProgramEnv/Windows WindowsWechat/WMPF";
 
@@ -128,6 +149,14 @@ class Tongcheng {
     }
 
     async login() {
+        // === token 缓存 ===
+        const cached = readCache()[this.openid];
+        if (cached && cached.loginInfo && cached.loginInfo.sectoken) {
+            this.loginInfo = cached.loginInfo;
+            $.log(`使用缓存登录态: sectoken=${maskToken(cached.loginInfo.sectoken)}`);
+            return `缓存登录态 openId=${this.loginInfo.openId || ""}`;
+        }
+
         const code = await getWxCode(APP.appid, this.openid);
         const res = await request({
             method: "POST",
@@ -146,6 +175,9 @@ class Tongcheng {
             memberId: content.memberId,
             sectoken: content.sectoken,
         };
+        const _cache = readCache();
+        _cache[this.openid] = { loginInfo: this.loginInfo, updatedAt: new Date().toISOString() };
+        writeCache(_cache);
         return `openId=${content.openId} memberId=${content.memberId || ""}`;
     }
 

@@ -25,7 +25,7 @@ TenancyName/AppId/id/webApiUniqueID 均为该小程序固定应用常量（原�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("深圳春茧未来荟签到");
 const axios = require("axios");
 const fs = require("fs");

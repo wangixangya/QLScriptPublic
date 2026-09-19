@@ -11,7 +11,7 @@ cron: 38 8 * * *
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("发发藏宝洞小程序签到");
 const axios = require("axios");
 const fs = require("fs");

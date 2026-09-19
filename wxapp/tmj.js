@@ -10,7 +10,7 @@ cron: 36 8 * * *
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("谭木匠会员俱乐部签到");
 const axios = require("axios");
 const crypto = require("crypto");

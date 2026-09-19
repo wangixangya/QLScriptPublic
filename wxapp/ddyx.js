@@ -23,7 +23,7 @@ CHANNEL_ID(154) 是该小程序渠道应用常量（原脚本默认值，非个�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("铛铛一下签到");
 const axios = require("axios");
 const fs = require("fs");

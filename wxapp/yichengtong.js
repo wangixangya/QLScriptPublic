@@ -13,7 +13,7 @@ cron: 20 8 * * *
 可选变量：yichengtong_token（单账号 token 兜底）
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("衣城通");
 const axios = require("axios");
 const crypto = require("crypto");

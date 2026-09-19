@@ -4,7 +4,7 @@
 变量值：账号标识/openid（支持多账号，用 & 或换行分隔）
 CODE登录依赖：wx_server_url、wx_auth
 */
-const { Env } = require("../tools/env");
+const { Env } = require("./env");
 const $ = new Env("爱玛会员俱乐部");
 const axios = require("axios");
 const crypto = require("crypto");
@@ -256,6 +256,14 @@ async function signIn(account, index) {
     const env = process.env.aima;
     if (env) {
       accounts = env.split(/&|\n/).map((t) => t.trim()).filter(Boolean);
+    }
+  }
+
+  if (accounts.length === 0) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+      accounts = yybServers;
+      console.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
     }
   }
 

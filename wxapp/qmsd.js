@@ -28,7 +28,7 @@ appid 是固定应用标识；code 头为客户端设备 UUID（本脚本自动�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("全棉时代签到");
 const axios = require("axios");
 const crypto = require("crypto");

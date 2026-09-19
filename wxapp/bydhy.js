@@ -23,7 +23,7 @@ AES_KEY/IV、APPKEY、APPSECRET 是这家小程序固定加密常量（原脚本
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("比亚迪海洋签到");
 const axios = require("axios");
 const crypto = require("crypto");

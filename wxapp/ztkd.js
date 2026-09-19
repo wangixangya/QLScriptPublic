@@ -19,13 +19,29 @@ wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("中通快递");
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
 const CK_NAME = "ztkd";
 const APP = { name: "中通快递", appid: "wx7ddec43d9d27276a", version: 670 };
 const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
+
+const TOKEN_CACHE_FILE = path.join(__dirname, "ztkd_token_cache.json");
+
+function readCache() {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) return {};
+        return JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, "utf8")) || {};
+    } catch (e) { return {}; }
+}
+
+function writeCache(c) {
+    try { fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(c, null, 2), "utf8"); } catch (e) {}
+}
+
 const WX_AUTH = process.env.wx_auth || "";
 const MAIN_HOST = "https://hdgateway.zto.com/";
 const MEMBER_HOST = "https://membergateway.zto.com/";
@@ -149,6 +165,15 @@ class ZtoExpress {
         }
         if (!this.account.openid) throw new Error("未配置 openid 或 token");
 
+        // === token 缓存 ===
+        const cached = readCache()[this.account.openid];
+        if (cached && cached.token) {
+            this.token = cached.token;
+            this.openId = cached.openId || "";
+            $.log(`账号[${this.index}] 使用缓存token: ${maskToken(this.token)}`);
+            return;
+        }
+
         const code = await getWxCode(this.account.openid);
         const res = await this.api(MAIN_HOST, "auth_wechatMini_authByCode", { code }, true);
         const data = res.result || res.data || {};
@@ -239,7 +264,12 @@ class ZtoExpress {
 }
 
 (async () => {
-    const accounts = splitAccounts(process.env[CK_NAME] || process.env.wx_openid || "");
+    let accounts = splitAccounts(process.env[CK_NAME] || process.env.wx_openid || "");
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+      accounts = yybServers;
+      console.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
     if (!accounts.length) {
         $.log(`未配置 ${CK_NAME}`);
         await $.done();

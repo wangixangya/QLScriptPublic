@@ -38,7 +38,7 @@ passToken/userId/cUserId 为登录后本机生成的会话票据，按 openid �
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("小米社区签到");
 const axios = require("axios");
 const fs = require("fs");

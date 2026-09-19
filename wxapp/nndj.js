@@ -27,7 +27,7 @@ insertWxUser 里的 avatar 是应用默认头像 URL（原脚本硬编码，非�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("牛牛短剧签到");
 const axios = require("axios");
 const fs = require("fs");

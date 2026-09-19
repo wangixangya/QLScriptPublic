@@ -27,7 +27,7 @@ cron: 18 8 * * *
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("骆驼CAMEL签到");
 const axios = require("axios");
 const fs = require("fs");

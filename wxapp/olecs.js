@@ -28,7 +28,7 @@ LOCATION 为就近门店解析坐标(应用级配置，非个人凭证)。unique
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("Ole超市签到");
 const axios = require("axios");
 const crypto = require("crypto");

@@ -24,7 +24,7 @@ authSilentSign 为静默登录，通常任意微信 code 均可自动建号，�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("途虎养车签到");
 const axios = require("axios");
 const crypto = require("crypto");

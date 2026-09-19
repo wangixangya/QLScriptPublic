@@ -32,7 +32,7 @@ CLIENT_CODE 是该小程序固定应用标识（原脚本硬编码，非个人�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("加多宝Club签到");
 const axios = require("axios");
 const fs = require("fs");

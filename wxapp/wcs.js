@@ -32,7 +32,7 @@ class WeChatCodeServer {
                     if (!code) {
                         console.log('YYB-Go 返回无code: ' + JSON.stringify(res.data));
                     }
-                    resolve({ data: { code: code || "" } });
+                    resolve({ data: { status: true, data: { code: code || "" } } });
                 }).catch(err => {
                     reject(err);
                 });

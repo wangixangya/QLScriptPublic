@@ -24,7 +24,7 @@ activityId=170630 是这家的固定签到活动（原脚本硬编码，会失�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("杰士邦会员中心");
 const axios = require("axios");
 const fs = require("fs");

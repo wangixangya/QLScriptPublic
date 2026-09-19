@@ -22,7 +22,7 @@ WeChatCodeServer 填写wx_server_url wx_auth 用于获取code
 
 const {
     Env
-} = require("../tools/env")
+} = require("./env")
 const $ = new Env("浓五的酒馆");
 const WeChatServer = require("./wcs.js"); 
 let ckName = `nwdjg`;
@@ -36,6 +36,24 @@ let wechat = new WeChatServer({
 
 }
 );
+const TOKEN_CACHE_FILE = path.join(__dirname, "nwdjg_token_cache.json");
+
+function readCache() {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) return {};
+        return JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, "utf8")) || {};
+    } catch (e) { return {}; }
+}
+
+function writeCache(c) {
+    try { fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(c, null, 2), "utf8"); } catch (e) {}
+}
+
+function maskToken(t = "") {
+    if (!t) return "";
+    return t.length > 12 ? `${t.slice(0, 6)}***${t.slice(-6)}` : `${t.slice(0, 3)}***`;
+}
+
 
 class Task {
     constructor(env) {
@@ -64,7 +82,14 @@ class Task {
     async run() {
         //随机延迟5-30s 模拟人工操作
        await $.wait(Math.floor(Math.random() * 20 + 5) * 1000);
-        let { data: codeRes } = await wechat.getCode(this.wcsid)
+        
+        // === token 缓存 ===
+        const cached = readCache()[this.wcsid];
+        if (cached && cached.token) {
+            this.token = cached.token;
+            $.log(`账号[${this.index}] 使用缓存token: ${maskToken(this.token)}`);
+        }
+let { data: codeRes } = await wechat.getCode(this.wcsid)
         if (codeRes.status) {
             await this.getUserToken(codeRes.data.code)
         } else {
@@ -98,6 +123,9 @@ class Task {
 
         if (result?.code == '0') {
             this.token = result.data
+            const _cache = readCache();
+            _cache[this.wcsid] = { token: this.token, updatedAt: new Date().toISOString() };
+            writeCache(_cache);
             $.log(`🌸账号[${this.index}] 获取用户Token成功`)
         } else {
             $.log(`🌸账号[${this.index}] 获取用户Token-失败:${result.msg}❌`)

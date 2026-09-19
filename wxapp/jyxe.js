@@ -37,7 +37,7 @@ wek2020123456788wek（解包 f552 模块的请求拦截器里写死的 noauth to
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("旧衣小二");
 const axios = require("axios");
 const fs = require("fs");

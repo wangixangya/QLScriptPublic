@@ -27,7 +27,7 @@ CLIENT_SECRET/spaceId/UNI_APPID 是应用固定配置（原脚本硬编码，非
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("宝妈上班");
 const axios = require("axios");
 const crypto = require("crypto");

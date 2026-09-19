@@ -11,9 +11,11 @@ cron: 20 8 * * *
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("飞鹤星妈会");
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
 const CK_NAME = "fhxmh";
 const APP = { name: "飞鹤星妈会", appid: "wxc83b55d61c7fc51d" };
@@ -22,6 +24,25 @@ const OK_CODES = ["00000", "000000", "A00002"];
 const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const DEFAULT_OPENID = process.env.wx_openid || "";
+
+const TOKEN_CACHE_FILE = path.join(__dirname, "fhxmh_token_cache.json");
+
+function readCache() {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) return {};
+        return JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, "utf8")) || {};
+    } catch (e) { return {}; }
+}
+
+function writeCache(c) {
+    try { fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(c, null, 2), "utf8"); } catch (e) {}
+}
+
+function maskToken(t = "") {
+    if (!t) return "";
+    return t.length > 12 ? `${t.slice(0, 6)}***${t.slice(-6)}` : `${t.slice(0, 3)}***`;
+}
+
 const USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MicroMessenger/3.9.12 MiniProgramEnv/Windows WindowsWechat/WMPF";
 
@@ -127,6 +148,9 @@ class FeiheMom {
         }
         if (res.status !== 200 || !token) throw new Error(`登录失败 HTTP ${res.status}: ${short(res.data)}`);
         this.token = token;
+        const _cache = readCache();
+        _cache[this.openid] = { token, updatedAt: new Date().toISOString() };
+        writeCache(_cache);
         return `token=${token.slice(0, 8)}***`;
     }
 
@@ -181,6 +205,12 @@ class FeiheMom {
 async function runAccount(openid, index) {
     $.log(`\n========== ${APP.name} 账号[${index}] ${openid} ==========`);
     const runner = new FeiheMom(openid);
+    // === token 缓存 ===
+    const cached = readCache()[openid];
+    if (cached && cached.token) {
+        runner.token = cached.token;
+        $.log(`账号[${index}] 使用缓存token: ${maskToken(cached.token)}`);
+    }
     try {
         $.log(`登录：${await runner.login()}`);
         $.log(`查询：${await runner.query()}`);
@@ -196,10 +226,15 @@ async function runAccount(openid, index) {
 }
 
 (async () => {
-    const accounts = (process.env[CK_NAME] || DEFAULT_OPENID || "")
+    let accounts = (process.env[CK_NAME] || DEFAULT_OPENID || "")
         .split((process.env[CK_NAME] || "").includes("\n") ? "\n" : "&")
         .map((x) => x.trim())
         .filter(Boolean);
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+      accounts = yybServers;
+      console.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
     if (!accounts.length) {
         $.log(`未配置 ${CK_NAME}`);
         await $.done();

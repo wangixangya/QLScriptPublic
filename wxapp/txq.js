@@ -38,7 +38,7 @@ wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("汤星球");
 const axios = require("axios");
 const fs = require("fs");

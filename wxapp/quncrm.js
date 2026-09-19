@@ -41,7 +41,7 @@ errors.campaign.memberFilter.code == "memberBanned"，即"活动仅针对部分�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("群脉平台签到");
 const axios = require("axios");
 const fs = require("fs");

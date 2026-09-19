@@ -17,7 +17,7 @@ wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("腾讯地图");
 const axios = require("axios");
 const crypto = require("crypto");
@@ -195,7 +195,10 @@ class TencentMap {
     constructor(rawAccount, index) {
         this.index = index;
         this.account = parseAccount(rawAccount);
-        this.loginInfo = {};
+        this.loginInfo = {}
+        const _cache = readCache();
+        _cache[this.account.openid] = { loginInfo: this.loginInfo, userInfo: this.userInfo, updatedAt: new Date().toISOString() };
+        writeCache(_cache);;
         this.userInfo = {};
     }
 
@@ -342,7 +345,12 @@ class TencentMap {
 }
 
 (async () => {
-    const accounts = splitAccounts(process.env[CK_NAME] || process.env.tencentmap || process.env.wx_openid || "");
+    let accounts = splitAccounts(process.env[CK_NAME] || process.env.tencentmap || process.env.wx_openid || "");
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+      accounts = yybServers;
+      console.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
     if (!accounts.length) {
         $.log(`未配置 ${CK_NAME}`);
         await $.done();

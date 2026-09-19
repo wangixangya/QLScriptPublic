@@ -23,7 +23,7 @@ actCode：按月生成候选 SG{YY}{上月}{0-9} 逐个探测（原脚本机制�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("小紫有约签到");
 const axios = require("axios");
 const fs = require("fs");

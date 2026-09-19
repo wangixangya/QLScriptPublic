@@ -27,7 +27,7 @@ appKey/appVersion/areaId/equipmentType 等是该小程序固定应用常量（�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("酒仙签到");
 const axios = require("axios");
 const fs = require("fs");

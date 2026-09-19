@@ -23,7 +23,7 @@ STORE_IDS=["5545556","4815863"] 逐个尝试（都市甜心的门店）。
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("都市甜心签到");
 const axios = require("axios");
 const fs = require("fs");

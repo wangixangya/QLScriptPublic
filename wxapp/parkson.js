@@ -10,7 +10,7 @@ cron: 35 8 * * *
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("呼啦圈小程序签到");
 const axios = require("axios");
 const fs = require("fs");

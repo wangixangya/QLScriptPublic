@@ -11,16 +11,37 @@ cron: 23 8 * * *
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("趣蛙/匠心优选");
 const axios = require("axios");
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 
 const CK_NAME = "quwa_jxyx";
 const APP = { name: "趣蛙/匠心优选", appid: "wxddaa0832e6acc5f1" };
 const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const DEFAULT_OPENID = process.env.wx_openid || "";
+
+const TOKEN_CACHE_FILE = path.join(__dirname, "quwa_jxyx_token_cache.json");
+
+function readCache() {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) return {};
+        return JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, "utf8")) || {};
+    } catch (e) { return {}; }
+}
+
+function writeCache(c) {
+    try { fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(c, null, 2), "utf8"); } catch (e) {}
+}
+
+function maskToken(t = "") {
+    if (!t) return "";
+    return t.length > 12 ? `${t.slice(0, 6)}***${t.slice(-6)}` : `${t.slice(0, 3)}***`;
+}
+
 const USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MicroMessenger/3.9.12 MiniProgramEnv/Windows WindowsWechat/WMPF";
 
@@ -118,6 +139,9 @@ class Quwa {
         const login = await this.api("/mini_program/get_openid.do", { code });
         if (String(login?.code) !== "1" || !login?.data?.token) throw new Error(`登录失败: ${short(login)}`);
         this.token = login.data.token;
+        const _cache = readCache();
+        _cache[this.openid] = { token: this.token, updatedAt: new Date().toISOString() };
+        writeCache(_cache);
         const check = await this.api("/consumer/consumer/checkOpenid.do", { invitation: "" });
         const data = check?.data || {};
         this.userID = data.userID || data.userid || data.id || login.data.userID || "";
@@ -153,6 +177,12 @@ class Quwa {
 async function runAccount(openid, index) {
     $.log(`\n========== ${APP.name} 账号[${index}] ${openid} ==========`);
     const runner = new Quwa(openid);
+    // === token 缓存 ===
+    const cached = readCache()[openid];
+    if (cached && cached.token) {
+        runner.token = cached.token;
+        $.log(`账号[${index}] 使用缓存token: ${maskToken(cached.token)}`);
+    }
     try {
         $.log(`登录：${await runner.login()}`);
         $.log(`查询：${await runner.query()}`);

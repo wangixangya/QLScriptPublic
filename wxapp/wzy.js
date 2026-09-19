@@ -33,7 +33,7 @@ CA_KEY / ACTIVITY_CODE(MGM_SIGN) 是该小程序固定应用常量（原脚本�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("喂自由签到");
 const axios = require("axios");
 const fs = require("fs");

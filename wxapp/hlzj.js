@@ -30,7 +30,7 @@ ezr-brand-id、CONVERT_URL、BASE_URL 均为该小程序固定应用常量（非
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("海澜之家签到");
 const axios = require("axios");
 const crypto = require("crypto");

@@ -12,7 +12,7 @@ cron: 25 8 * * *
 可选变量：fuyouhui_token（单账号 token 兜底）
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("复游会");
 const axios = require("axios");
 const crypto = require("crypto");

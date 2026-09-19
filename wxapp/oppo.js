@@ -21,8 +21,10 @@ wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
 const $ = new Env("OPPO");
 
@@ -41,6 +43,25 @@ const CREDITS_ADD_ACTION_ID = "1788913e6d9e4683b8b9ab0088733560";
 const BUSINESS = 1;
 const SIGN_PAGE =
     "https://hd.opposhop.cn/bp/b371ce270f7509f0?nightModelEnable=true&utm_source=huiyuanwx&utm_medium=me_qiandao";
+
+const TOKEN_CACHE_FILE = path.join(__dirname, "oppo_token_cache.json");
+
+function readCache() {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) return {};
+        return JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, "utf8")) || {};
+    } catch (e) { return {}; }
+}
+
+function writeCache(c) {
+    try { fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(c, null, 2), "utf8"); } catch (e) {}
+}
+
+function maskToken(t = "") {
+    if (!t) return "";
+    return t.length > 12 ? `${t.slice(0, 6)}***${t.slice(-6)}` : `${t.slice(0, 3)}***`;
+}
+
 const USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MicroMessenger/3.9.12 MiniProgramEnv/Windows WindowsWechat/WMPF";
 // 抓 H5 页面用手机端微信 UA，跟小程序 web-view 里的环境一致
@@ -210,6 +231,17 @@ class OppoTask {
 
     async login() {
         if (!this.account.openid) throw new Error("账号格式错误，请配置 wx_server 里的 openid");
+
+        // === token 缓存 ===
+        const cached = readCache()[this.account.openid];
+        if (cached && cached.sessionId) {
+            this.sessionId = cached.sessionId;
+            this.encryptedSession = cached.encryptedSession || "";
+            this.openId = cached.openId || "";
+            this.log(`使用缓存 session: ${maskToken(cached.sessionId)}`);
+            return;
+        }
+
         const code = await getWxCode(this.account.openid);
         const { status, data } = await request({
             method: "POST",
@@ -226,6 +258,9 @@ class OppoTask {
         this.encryptedSession = info.encryptedSession || "";
         this.openId = info.openId || "";
         if (!this.sessionId) throw new Error(`登录响应缺少 sessionId: ${short(data)}`);
+        const _cache = readCache();
+        _cache[this.account.openid] = { sessionId: this.sessionId, encryptedSession: this.encryptedSession, openId: this.openId, updatedAt: new Date().toISOString() };
+        writeCache(_cache);
         this.log(`登录成功 openId=${this.openId || "未知"}`);
     }
 

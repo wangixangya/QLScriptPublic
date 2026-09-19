@@ -30,7 +30,7 @@ app_id=33 / xcx_version / activity type 201811 均为该小程序固定应用常
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("拼多多果园签到");
 const axios = require("axios");
 const fs = require("fs");

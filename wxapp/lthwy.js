@@ -26,7 +26,7 @@ vid/bosId/cid/merchantId/productInstanceId/productVersionId 等是这家小程�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("骆驼户外运动城签到");
 const axios = require("axios");
 const fs = require("fs");

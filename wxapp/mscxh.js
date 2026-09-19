@@ -27,7 +27,7 @@ salt / store_id 是这家小程序固定应用常量（原脚本硬编码，非�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("玛氏宠享会签到");
 const axios = require("axios");
 const crypto = require("crypto");

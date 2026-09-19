@@ -22,7 +22,7 @@ qqpcmgr_lid         默认 Lottery2
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const axios = require("axios");
 
 const $ = new Env("腾讯电脑管家登录");
@@ -304,7 +304,12 @@ async function runAccount(account, index) {
 }
 
 (async () => {
-    const accounts = process.env.qqpcmgr_authCode ? [""] : splitAccounts(process.env[CK_NAME] || "");
+    let accounts = process.env.qqpcmgr_authCode ? [""] : splitAccounts(process.env[CK_NAME] || "");
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+      accounts = yybServers;
+      console.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
     if (!accounts.length) throw new Error(`未配置 ${CK_NAME}，或设置 qqpcmgr_authCode 直接测试`);
 
     for (let i = 0; i < accounts.length; i++) {

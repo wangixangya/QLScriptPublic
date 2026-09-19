@@ -44,7 +44,7 @@ yipiaoda_phone_login  默认 1。首次登录若服务端只回 authToken（说�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("华润壹票达");
 const axios = require("axios");
 const crypto = require("crypto");

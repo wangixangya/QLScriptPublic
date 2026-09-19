@@ -14,7 +14,7 @@ cron: 30 8 * * *
 说明：openid 首次自动登录会通过 wx_server 的 /wx/getphonenumber 获取手机号授权 code。
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("海信爱家");
 const axios = require("axios");
 const crypto = require("crypto");

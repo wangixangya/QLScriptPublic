@@ -14,8 +14,10 @@ wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
 const $ = new Env("优点云创");
 
@@ -24,6 +26,25 @@ const APP = { name: "优点云创", appid: "wx96eb3beaea480465", version: 1 };
 const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const API_URL = "https://youdianyunchuan.weimbo.com/api/index.php?ackey=GZYTAPPLET";
+
+const TOKEN_CACHE_FILE = path.join(__dirname, "ydyc_token_cache.json");
+
+function readCache() {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) return {};
+        return JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, "utf8")) || {};
+    } catch (e) { return {}; }
+}
+
+function writeCache(c) {
+    try { fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(c, null, 2), "utf8"); } catch (e) {}
+}
+
+function maskToken(t = "") {
+    if (!t) return "";
+    return t.length > 12 ? `${t.slice(0, 6)}***${t.slice(-6)}` : `${t.slice(0, 3)}***`;
+}
+
 const USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MicroMessenger/3.9.12 MiniProgramEnv/Windows WindowsWechat/WMPF";
 
@@ -122,11 +143,24 @@ class YouDianYunChuang {
 
     async login() {
         if (!this.account.openid) throw new Error("账号格式错误，请配置 wx_server 里的 openid");
+
+        // === token 缓存 ===
+        const cached = readCache()[this.account.openid];
+        if (cached && cached.session) {
+            this.session = cached.session;
+            this.openid = cached.openid || "";
+            this.log(`使用缓存 session: ${maskToken(cached.session)}`);
+            return;
+        }
+
         const code = await getWxCode(this.account.openid);
         const data = await this.call({ action: "WxLogin", code });
         this.session = data.r3dkey || "";
         this.openid = data.openid || "";
         if (!this.session) throw new Error(`登录响应缺少 r3dkey: ${short(data)}`);
+        const _cache = readCache();
+        _cache[this.account.openid] = { session: this.session, openid: this.openid, updatedAt: new Date().toISOString() };
+        writeCache(_cache);
         this.log(`登录成功 openid=${this.openid || "未知"}`);
     }
 

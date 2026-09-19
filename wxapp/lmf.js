@@ -31,7 +31,7 @@ APP_ID/APP_SECRET/RAND_STR 是这家小程序固定应用签名常量（原脚�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("绿蜜蜂签到");
 const axios = require("axios");
 const crypto = require("crypto");

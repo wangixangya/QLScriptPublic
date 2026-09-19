@@ -25,7 +25,7 @@ platformKey F2EE24892FBF66F0AFF8C0EB532A9394 是这家小程序的固定平台�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("飞蚂蚁旧衣回收");
 const axios = require("axios");
 const fs = require("fs");

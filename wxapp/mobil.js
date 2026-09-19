@@ -29,7 +29,7 @@ MALL_ID / APP_VERSION 是应用级常量（原脚本硬编码，非个人凭证�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("美孚臻享俱乐部签到");
 const axios = require("axios");
 const fs = require("fs");

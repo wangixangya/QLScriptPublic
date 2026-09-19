@@ -36,7 +36,7 @@ SIGN_SECRET / SW_APP_SIGN_SECRET / SW_APP_SK / SW_APP_LTK / AUTH_SK / device_mod
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("得物种树签到");
 const axios = require("axios");
 const crypto = require("crypto");

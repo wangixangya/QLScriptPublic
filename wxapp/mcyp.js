@@ -29,7 +29,7 @@ AES key/iv、SIGN_PREFIX、activityId 均为该小程序固定应用常量（原
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("名创优品签到");
 const axios = require("axios");
 const crypto = require("crypto");

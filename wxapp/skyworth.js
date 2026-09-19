@@ -11,16 +11,32 @@ cron: 38 8 * * *
 依赖变量：wx_server_url、wx_auth
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("创维会员中心");
 const axios = require("axios");
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 
 const CK_NAME = process.env.skyworth ? "skyworth" : "chuangwei";
 const MINI_APP_ID = "wxff438d3c60c63fb6";
 const PACKAGE_VERSION = "371";
 const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
+
+const TOKEN_CACHE_FILE = path.join(__dirname, "skyworth_token_cache.json");
+
+function readCache() {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) return {};
+        return JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, "utf8")) || {};
+    } catch (e) { return {}; }
+}
+
+function writeCache(c) {
+    try { fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(c, null, 2), "utf8"); } catch (e) {}
+}
+
 const API_BASE = "https://uc-api.skyallhere.com/miniprogram/api";
 const SIGN_TASK_CODES = ["TS00016", "TS00017"];
 const TASK_PRIVATE_KEY = `-----BEGIN RSA PRIVATE KEY-----
@@ -165,6 +181,13 @@ class Skyworth {
     }
     if (!this.account.openid) throw new Error("账号格式错误，请配置 wx_server 中的 openid 或直接配置 token");
 
+    // === token 缓存 ===
+    const cached = readCache()[this.account.openid];
+    if (cached && cached.token) {
+        this.token = cached.token;
+        this.log(`使用缓存token: ${mask(cached.token)}`);
+    }
+
     const code = await getWxCode(this.account.openid);
     const ticketData = this.assertOk(await this.api("POST", "/v2/user/exchange", { code }), "换取 ticket");
     const ticket = ticketData?.ticket || "";
@@ -173,6 +196,9 @@ class Skyworth {
     const loginData = this.assertOk(await this.api("POST", "/v2/user/signin", { ticket }), "登录");
     this.token = loginData?.token || "";
     if (!this.token) throw new Error(`登录响应缺少 token: ${short(loginData)}`);
+    const _cache = readCache();
+    _cache[this.account.openid] = { token: this.token, updatedAt: new Date().toISOString() };
+    writeCache(_cache);
     this.log(`登录成功 token=${mask(this.token)}`);
   }
 

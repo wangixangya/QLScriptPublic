@@ -11,15 +11,36 @@ cron: 35 8 * * *
 依赖变量：wx_server_url、wx_auth
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("华住会");
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
 const ckName = "huazhu";
 const MINI_APP_ID = "wx286efc12868f2559";
 const PACKAGE_VERSION = "580";
 const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
+
+const TOKEN_CACHE_FILE = path.join(__dirname, "huazhu_token_cache.json");
+
+function readCache() {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) return {};
+        return JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, "utf8")) || {};
+    } catch (e) { return {}; }
+}
+
+function writeCache(c) {
+    try { fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(c, null, 2), "utf8"); } catch (e) {}
+}
+
+function maskToken(t = "") {
+    if (!t) return "";
+    return t.length > 12 ? `${t.slice(0, 6)}***${t.slice(-6)}` : `${t.slice(0, 3)}***`;
+}
+
 const LOGIN_BASE = "https://hweb-minilogin.huazhu.com/api";
 const PERSONAL_BASE = "https://hweb-personalcenter.huazhu.com";
 const SIGN_BASE = "https://appgw.huazhu.com";
@@ -133,6 +154,15 @@ class Huazhu {
     }
     if (!this.account.openid) throw new Error("账号格式错误，请配置 wx_server 中的 openid 或直接配置 sId");
 
+    // === token 缓存 ===
+    const cached = readCache()[this.account.openid];
+    if (cached && cached.sId) {
+      this.sId = cached.sId;
+      this.memberId = cached.memberId || "";
+      this.log(`使用缓存 sId: ${mask(this.sId)}`);
+      return;
+    }
+
     const code = await getWxCode(this.account.openid);
     const { status, data } = await request({
       method: "POST",
@@ -145,6 +175,9 @@ class Huazhu {
     this.sId = data?.Extend?.crossAuth || data?.Data || "";
     this.memberId = data?.Extend?.memberId || "";
     if (!this.sId) throw new Error(`登录响应缺少 sId: ${short(data)}`);
+    const _cache = readCache();
+    _cache[this.account.openid] = { sId: this.sId, memberId: this.memberId, updatedAt: new Date().toISOString() };
+    writeCache(_cache);
     this.log(`登录成功 memberId=${this.memberId || "-"} sId=${mask(this.sId)}`);
   }
 

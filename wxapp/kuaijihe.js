@@ -26,7 +26,7 @@ token / user_id 都放在 body 里，不是请求头。成功码 code==1，提�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("快集合");
 const axios = require("axios");
 const fs = require("fs");

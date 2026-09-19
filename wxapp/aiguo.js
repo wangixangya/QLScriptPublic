@@ -39,7 +39,7 @@ wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("爱裹旧衣回收");
 const axios = require("axios");
 const crypto = require("crypto");

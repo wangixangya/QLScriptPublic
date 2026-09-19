@@ -16,14 +16,35 @@ wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("视软ytb2统一签到");
 const axios = require("axios");
 const WeChatServer = require("./wcs.js");
+const fs = require("fs");
+const path = require("path");
 
 const CK_NAME = "ytb2_all";
 const API_BASE = "https://ytb2.zs-shiruan.cn/api";
 const LOGIN_BASE = "https://ytb2.zs-shiruan.cn/api-v2";
+
+const TOKEN_CACHE_FILE = path.join(__dirname, "ytb2_all_token_cache.json");
+
+function readCache() {
+    try {
+        if (!fs.existsSync(TOKEN_CACHE_FILE)) return {};
+        return JSON.parse(fs.readFileSync(TOKEN_CACHE_FILE, "utf8")) || {};
+    } catch (e) { return {}; }
+}
+
+function writeCache(c) {
+    try { fs.writeFileSync(TOKEN_CACHE_FILE, JSON.stringify(c, null, 2), "utf8"); } catch (e) {}
+}
+
+function maskToken(t = "") {
+    if (!t) return "";
+    return t.length > 12 ? `${t.slice(0, 6)}***${t.slice(-6)}` : `${t.slice(0, 3)}***`;
+}
+
 const USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MicroMessenger/3.9.12 MiniProgramEnv/Windows WindowsWechat/WMPF";
 
@@ -168,6 +189,17 @@ class Task {
     }
 
     async login() {
+        // === token 缓存 ===
+        const cached = readCache()[this.account];
+        if (cached && cached.shiruanKey) {
+            this.shiruanKey = cached.shiruanKey;
+            this.openid = cached.openid || "";
+            this.mobile = cached.mobile || "";
+            this.templateUrl = cached.templateUrl || "";
+            this.log(`使用缓存 key: ${maskToken(cached.shiruanKey)}`);
+            return;
+        }
+
         const code = await this.getCode();
         const { data } = await axios.post(
             `${this.app.loginBase}/mini/preLogin-new`,
@@ -186,6 +218,9 @@ class Task {
         this.openid = data.data?.openid || "";
         this.mobile = data.data?.mobile || "";
         this.templateUrl = data.data?.templateUrl || "";
+        const _cache = readCache();
+        _cache[this.account] = { shiruanKey: this.shiruanKey, openid: this.openid, mobile: this.mobile, templateUrl: this.templateUrl, updatedAt: new Date().toISOString() };
+        writeCache(_cache);
         this.log(`登录成功: ${maskPhone(this.mobile)} openId=${this.openid}`);
     }
 

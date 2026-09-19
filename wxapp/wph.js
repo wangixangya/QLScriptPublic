@@ -36,7 +36,7 @@ marsCid 为设备号，首次生成后按账号缓存复用（登录与签名都
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("唯品会签到");
 const axios = require("axios");
 const crypto = require("crypto");

@@ -8,7 +8,7 @@ cron: 40 8 * * *
 依赖变量：wx_server_url、wx_auth
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("WPS");
 const axios = require("axios");
 const crypto = require("crypto");

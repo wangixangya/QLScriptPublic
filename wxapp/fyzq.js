@@ -13,7 +13,7 @@ web-view 打开 h5Url+'sign'），老接口 /min/min-mall/sign_sign_in 已被服
 但请求体是 header/body 信封，成功码是 0 而不是 1）。
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("风云再起北京");
 const axios = require("axios");
 const crypto = require("crypto");

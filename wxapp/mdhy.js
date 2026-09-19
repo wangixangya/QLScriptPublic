@@ -28,7 +28,7 @@ LOGIN_APP_ID/SECRET/API_KEY、SIGN2_API_KEY、actvId 均为该小程序固定应
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("美的会员签到");
 const axios = require("axios");
 const fs = require("fs");

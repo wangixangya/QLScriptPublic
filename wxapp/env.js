@@ -153,6 +153,11 @@ function Env(t, s) {
             return t;
         }
 
+        msg(content) {
+            this.notifyStr.push(`[${this.time("HH:mm:ss")}]` + " " + this.toStr(content))
+            console.log(content)
+        }
+
         log(content) {
             this.notifyStr.push(`[${this.time("HH:mm:ss")}]` + " " + this.toStr(content))
             console.log(content)

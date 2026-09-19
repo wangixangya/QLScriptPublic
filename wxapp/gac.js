@@ -30,7 +30,7 @@ APP_ID/APP_SIG_SECRET/RSA公私钥/Basic 串 均为该小程序固定应用常�
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("广汽丰田新能源签到");
 const axios = require("axios");
 const crypto = require("crypto");

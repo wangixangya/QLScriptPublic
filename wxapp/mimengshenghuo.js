@@ -17,7 +17,7 @@ mimeng_video_times  限制每个账号本次最多执行几次视频任务，默
 ------------------------------------------
 */
 
-const { Env } = require("../tools/env.js");
+const { Env } = require("./env.js");
 const $ = new Env("米萌生活");
 const axios = require("axios");
 const fs = require("fs");
