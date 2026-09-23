@@ -4,6 +4,10 @@ package*.json
 .codex
 .czrc
 Tools/
+__pycache__/
+*.pyc
+*.pyo
 wxapp/*_token_cache.json
 daily/*_token_cache.json
-.pyc
+idp/*_token_cache.json
+json/
