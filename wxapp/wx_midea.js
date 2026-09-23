@@ -205,8 +205,15 @@ async function checkEnv() {
             }
         for (let n of userCookie.split(e)) n && userList.push(new UserInfo(n));
     } else {
+// === YYB-Go 兼容层 ===
+const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+if (yybServers.length) {
+    yybServers.forEach(n => userList.push(new UserInfo(n)));
+    console.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+} else {
         console.log("未找到CK");
         return;
+    }
     }
     return console.log(`共找到${userList.length}个账号`), true; //true == !0
 }

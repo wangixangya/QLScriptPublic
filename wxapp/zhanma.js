@@ -974,8 +974,15 @@ async function Envs() {
             zmnlxqArr.push(zmnlxq);
         }
     } else {
+// === YYB-Go 兼容层 ===
+const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+if (yybServers.length) {
+    zmnlxqArr = yybServers;
+    console.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+} else {
         console.log(`\n 【${$.name}】：未填写变量 zmnlxq`)
         return;
+    }
     }
 
     return true;
