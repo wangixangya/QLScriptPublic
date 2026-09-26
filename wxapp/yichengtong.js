@@ -44,7 +44,7 @@ const AUTO_TASK_TYPES = new Set([
 ]);
 
 const wechat = new WeChatServer({
-  url: process.env.wx_server_url || "http://172.23.0.2:8000",
+  url: process.env.wx_server_url || "http://172.17.0.1:8000",
   appid: MINI_APP_ID,
   auth: process.env.wx_auth || "your-api-key",
 });

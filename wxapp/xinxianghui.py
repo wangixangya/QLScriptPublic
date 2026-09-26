@@ -40,7 +40,7 @@ SESSION_INVALID_CODE = 20003                        # 登录会话失效 -> 需�
 NEED_AUTH_CODES = (20008, 20010)                    # 需授权 / 需手机号 (账号前置条件)
 
 # smallcat / wx_server 配置 (机密, 从环境变量读取, 绝不硬编码)
-WX_SERVER_URL = os.getenv("wx_server_url", "http://172.23.0.2:8000").rstrip("/")
+WX_SERVER_URL = os.getenv("wx_server_url", "http://172.17.0.1:8000").rstrip("/")
 WX_AUTH = os.getenv("wx_auth", "")
 # miniProgram.version, 发布版通常为空串; 服务端按传入值重算签名, 一般无需修改
 VERSION = os.getenv("xxh_version", "")
@@ -351,7 +351,7 @@ def main():
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -454,7 +454,7 @@ if _yyb_accts:
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -557,7 +557,7 @@ if _yyb_accts:
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -660,7 +660,7 @@ if _yyb_accts:
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -769,7 +769,7 @@ if __name__ == "__main__":
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -897,7 +897,7 @@ if "main" in globals():
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -1025,7 +1025,7 @@ if "main" in globals():
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -1153,7 +1153,7 @@ if "main" in globals():
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []

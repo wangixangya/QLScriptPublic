@@ -7,7 +7,7 @@ cron: 43 8 * * *
 变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行分隔（可加 #备注）
 
 依赖变量：
-wx_server_url  默认 http://172.23.0.2:8000
+wx_server_url  默认 http://172.17.0.1:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 契约（appid wxfe13a2a5df88b058，host crm.sanfu.com）：
@@ -40,7 +40,7 @@ const EP_LOGIN = "/ms-sanfu-wechat-customer-core/customer/core/wxMiniAppLogin";
 const EP_SIGN = "/ms-sanfu-wechat-common/customer/onSign";
 
 const wechat = new WeChatServer({
-    url: process.env.wx_server_url || "http://172.23.0.2:8000",
+    url: process.env.wx_server_url || "http://172.17.0.1:8000",
     appid: MINI_APP_ID,
     auth: process.env.wx_auth || "",
 });

@@ -20,7 +20,7 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 MINI_APP_ID = "wx61457400e4212cec"
-WX_SERVER_URL = os.getenv("wx_server_url", "http://172.23.0.2:8000").rstrip("/")
+WX_SERVER_URL = os.getenv("wx_server_url", "http://172.17.0.1:8000").rstrip("/")
 WX_AUTH = os.getenv("wx_auth", "")
 TOKEN_CACHE_PATH = Path(__file__).with_name("BREO_token_cache.json")
 LOGIN_BASE = "https://breoplus.breo.cn/app/minic"
@@ -352,7 +352,7 @@ def punch_in(token):
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -455,7 +455,7 @@ if _yyb_accts:
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -558,7 +558,7 @@ if _yyb_accts:
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -661,7 +661,7 @@ if _yyb_accts:
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -811,7 +811,7 @@ if __name__ == "__main__":
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -939,7 +939,7 @@ if "main" in globals():
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -1067,7 +1067,7 @@ if "main" in globals():
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -1195,7 +1195,7 @@ if "main" in globals():
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []

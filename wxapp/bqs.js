@@ -7,7 +7,7 @@ cron: 12 9 * * *
 变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行分隔（可加 #备注）
 
 依赖变量：
-wx_server_url  默认 http://172.23.0.2:8000
+wx_server_url  默认 http://172.17.0.1:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 契约（appid wx61457400e4212cec，host breoplus.breo.cn）：
@@ -49,7 +49,7 @@ const EP_PUNCH = `${APP_BASE}/user/po-task-info/punch`;
 const EP_MALL = `${APP_BASE}/user/po-task-info/mall`;
 
 const wechat = new WeChatServer({
-    url: process.env.wx_server_url || "http://172.23.0.2:8000",
+    url: process.env.wx_server_url || "http://172.17.0.1:8000",
     appid: MINI_APP_ID,
     auth: process.env.wx_auth || "",
 });

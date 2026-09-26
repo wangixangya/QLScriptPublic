@@ -13,7 +13,7 @@ cron: 49 8 * * *
        例：owNAX6vp****#wxc5d513880ace81a4#634f5f28a0e71c29500b0313#问问农会员
 
 依赖变量：
-wx_server_url  默认 http://172.23.0.2:8000
+wx_server_url  默认 http://172.17.0.1:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 契约（oauth.quncrm.com + consumer-api.quncrm.com）：
@@ -105,7 +105,7 @@ class Task {
         this.account = parseAccount(raw);
         this.token = "";
         this.wechat = new WeChatServer({
-            url: process.env.wx_server_url || "http://172.23.0.2:8000",
+            url: process.env.wx_server_url || "http://172.17.0.1:8000",
             appid: this.account.appid,
             auth: process.env.wx_auth || "",
         });

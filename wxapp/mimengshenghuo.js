@@ -9,7 +9,7 @@ cron: 30 8 * * *
 变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行
 
 依赖变量：
-wx_server_url  默认 http://172.23.0.2:8000
+wx_server_url  默认 http://172.17.0.1:8000
 wx_auth        必填，wx_server 鉴权值
 
 可选变量：
@@ -26,7 +26,7 @@ const path = require("path");
 const CK_NAME = "mimengshenghuo";
 const APP = { name: "米萌生活", appid: "wx9939a74ee8a8522a" };
 const GQL_URL = "https://shd.luxingiot.com/graphql";
-const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.17.0.1:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const DEFAULT_OPENID = process.env.wx_openid || "";
 const TOKEN_CACHE_FILE = path.join(__dirname, "mimengshenghuo_token_cache.json");

@@ -20,7 +20,7 @@ const path = require("path");
 
 const CK_NAME = "quwa_jxyx";
 const APP = { name: "趣蛙/匠心优选", appid: "wxddaa0832e6acc5f1" };
-const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.17.0.1:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const DEFAULT_OPENID = process.env.wx_openid || "";
 

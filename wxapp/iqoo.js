@@ -209,7 +209,7 @@ class Task {
 
     async getOperateData() {
         if (!process.env.wx_auth) throw new Error("缺少 wx_auth，无法从 wx_server 获取登录数据");
-        const url = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
+        const url = (process.env.wx_server_url || "http://172.17.0.1:8000").replace(/\/$/, "");
         const { data } = await axios.post(`${url}/wx/getuserinfo`, {
             appid: MINI_APP_ID,
             openid: this.openid,

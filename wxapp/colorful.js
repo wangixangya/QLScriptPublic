@@ -68,7 +68,7 @@ const EP_SIGN = "/api/User/SignV2"; // POST 无 body
 const SUCCESS_CODES = new Set([0, 52001, 52002, 50001, 51001, 51002, 40100, 40101]);
 
 const wechat = new WeChatServer({
-    url: WX_SERVER_URL || "http://172.23.0.2:8000",
+    url: WX_SERVER_URL || "http://172.17.0.1:8000",
     appid: MINI_APP_ID,
     auth: process.env.wx_auth || "",
 });
@@ -284,7 +284,7 @@ class Task {
         if (endpoint === "/wx/code") {
             ({ data } = await wechat.getCode(this.accountId));
         } else {
-            const url = (WX_SERVER_URL || "http://172.23.0.2:8000").replace(/\/+$/, "") + endpoint;
+            const url = (WX_SERVER_URL || "http://172.17.0.1:8000").replace(/\/+$/, "") + endpoint;
             ({ data } = await axios.post(
                 url,
                 { appid: MINI_APP_ID, openid: this.accountId },

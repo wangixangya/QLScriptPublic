@@ -14,7 +14,7 @@ cron: 20 8 * * *
 3. {"token":"xxx","openId":"xxx"}
 
 依赖变量：
-wx_server_url  默认 http://172.23.0.2:8000
+wx_server_url  默认 http://172.17.0.1:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
@@ -27,7 +27,7 @@ const path = require("path");
 
 const CK_NAME = "ztkd";
 const APP = { name: "中通快递", appid: "wx7ddec43d9d27276a", version: 670 };
-const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.17.0.1:8000").replace(/\/$/, "");
 
 const TOKEN_CACHE_FILE = path.join(__dirname, "ztkd_token_cache.json");
 

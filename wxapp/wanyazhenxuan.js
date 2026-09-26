@@ -48,7 +48,7 @@ const USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MicroMessenger/3.9.12 MiniProgramEnv/Windows WindowsWechat/WMPF";
 
 const ckName = "wyzx";
-const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.17.0.1:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 
 function short(value, max = 200) {

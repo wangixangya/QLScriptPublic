@@ -105,7 +105,7 @@ EP_SIGN_IN = "/fundex-activity/point/sign/userSignIn"
 EP_TOTAL_POINT = "/fundex-activity/point/account/getTotalPoint"
 
 # smallcat / wx_server 配置 (机密, 只从环境变量读取)
-WX_SERVER_URL = os.getenv("wx_server_url", "http://172.23.0.2:8000").rstrip("/")
+WX_SERVER_URL = os.getenv("wx_server_url", "http://172.17.0.1:8000").rstrip("/")
 WX_AUTH = os.getenv("wx_auth", "")
 VERSION = os.getenv("hshj_ver", "1.46.0")
 ALLOW_PHONE_LOGIN = os.getenv("hshj_phone_login", "1").strip().lower() not in ("0", "false", "no")
@@ -572,7 +572,7 @@ MANUAL_TICKETS = [
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -675,7 +675,7 @@ if _yyb_accts:
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -778,7 +778,7 @@ if _yyb_accts:
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -881,7 +881,7 @@ if _yyb_accts:
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -990,7 +990,7 @@ if __name__ == "__main__":
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -1118,7 +1118,7 @@ if "main" in globals():
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -1246,7 +1246,7 @@ if "main" in globals():
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -1374,7 +1374,7 @@ if "main" in globals():
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []

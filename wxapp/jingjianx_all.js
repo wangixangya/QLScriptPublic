@@ -12,7 +12,7 @@ cron: 30 8 * * *
 总变量可用 appid=openid、变量名=openid、小程序名=openid 指定单个小程序账号。
 
 依赖变量：
-wx_server_url  默认 http://172.23.0.2:8000
+wx_server_url  默认 http://172.17.0.1:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
@@ -25,7 +25,7 @@ const path = require("path");
 const WeChatServer = require("./wcs.js");
 
 const CK_NAME = "jingjianx_all";
-const WX_SERVER_URL = process.env.wx_server_url || "http://172.23.0.2:8000";
+const WX_SERVER_URL = process.env.wx_server_url || "http://172.17.0.1:8000";
 const WX_AUTH = process.env.wx_auth || "";
 const CACHE_FILE = path.join(__dirname, "jingjianx_all_token_cache.json");
 const USER_AGENT =

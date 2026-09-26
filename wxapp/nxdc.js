@@ -7,7 +7,7 @@ cron: 45 8 * * *
 变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行分隔（可加 #备注）
 
 依赖变量：
-wx_server_url  默认 http://172.23.0.2:8000
+wx_server_url  默认 http://172.17.0.1:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 契约（appid wxab7430e6e8b9a4ab，登录 tm-api.pin-dao.cn / 业务 tm-web.pin-dao.cn）：
@@ -43,7 +43,7 @@ const UA =
     "MicroMessenger/7.0.20.1781(0x6700143B) NetType/WIFI MiniProgramEnv/Windows WindowsWechat/WMPF";
 
 const wechat = new WeChatServer({
-    url: process.env.wx_server_url || "http://172.23.0.2:8000",
+    url: process.env.wx_server_url || "http://172.17.0.1:8000",
     appid: MINI_APP_ID,
     auth: process.env.wx_auth || "",
 });

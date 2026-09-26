@@ -118,7 +118,7 @@ const SUCCESS_CODES = new Set(["200", "40003"]);
 const CODE_SESSION_EXPIRED = "40001";
 
 const wechat = new WeChatServer({
-    url: WX_SERVER_URL || "http://172.23.0.2:8000",
+    url: WX_SERVER_URL || "http://172.17.0.1:8000",
     appid: MINI_APP_ID,
     auth: process.env.wx_auth || "",
 });

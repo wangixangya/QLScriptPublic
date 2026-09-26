@@ -7,7 +7,7 @@ cron: 17 9 * * *
 变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行分隔（可加 #备注）
 
 依赖变量：
-wx_server_url  默认 http://172.23.0.2:8000
+wx_server_url  默认 http://172.17.0.1:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 契约（appid wx0408f3f20d769a2f，host www.milkcard.mall.ryytngroup.com）：
@@ -48,7 +48,7 @@ const EP_LOGIN = "/mall/xhr/minilogin";
 const EP_CHECKIN = "/mall/xhr/task/checkin/save";
 const EP_RULE = "/mall/xhr/task/checkin/getRule";
 
-const WX_SERVER_URL = process.env.wx_server_url || "http://172.23.0.2:8000";
+const WX_SERVER_URL = process.env.wx_server_url || "http://172.17.0.1:8000";
 const WX_AUTH = process.env.wx_auth || "";
 
 const wechat = new WeChatServer({ url: WX_SERVER_URL, appid: MINI_APP_ID, auth: WX_AUTH });

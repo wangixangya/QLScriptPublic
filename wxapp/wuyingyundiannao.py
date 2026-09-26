@@ -57,7 +57,7 @@ BIZ_OK = "success"
 SESSION_INVALID = ("User.LoginInvalid", "InvalidLoginToken.Missing", "NOT_LOGIN")
 
 # smallcat / wx_server 配置 (机密, 从环境变量读取, 绝不硬编码)
-WX_SERVER_URL = os.getenv("wx_server_url", "http://172.23.0.2:8000").rstrip("/")
+WX_SERVER_URL = os.getenv("wx_server_url", "http://172.17.0.1:8000").rstrip("/")
 WX_AUTH = os.getenv("wx_auth", "")
 
 TOKEN_CACHE_PATH = Path(__file__).with_name("wuyingyundiannao_token_cache.json")
@@ -493,7 +493,7 @@ def main():
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -596,7 +596,7 @@ if _yyb_accts:
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -699,7 +699,7 @@ if _yyb_accts:
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -802,7 +802,7 @@ if _yyb_accts:
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -911,7 +911,7 @@ if __name__ == "__main__":
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -1039,7 +1039,7 @@ if "main" in globals():
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -1167,7 +1167,7 @@ if "main" in globals():
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
@@ -1295,7 +1295,7 @@ if "main" in globals():
 import os as _yyb_os
 import json as _yyb_json
 
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []

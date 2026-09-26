@@ -9,7 +9,7 @@ cron: 24 8 * * *
 变量值：wx_server 里的 openid，多账号用 & 或换行
 
 依赖变量：
-wx_server_url  默认 http://172.23.0.2:8000
+wx_server_url  默认 http://172.17.0.1:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 */
@@ -23,7 +23,7 @@ const $ = new Env("优点云创");
 
 const CK_NAME = "ydyc";
 const APP = { name: "优点云创", appid: "wx96eb3beaea480465", version: 1 };
-const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.17.0.1:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const API_URL = "https://youdianyunchuan.weimbo.com/api/index.php?ackey=GZYTAPPLET";
 

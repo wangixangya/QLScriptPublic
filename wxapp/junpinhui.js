@@ -60,13 +60,13 @@ const MAIN_BASE = "https://xcx.exijiu.com/anti-channeling/public/index.php/api/v
 const TOKEN_CACHE_FILE = path.join(__dirname, "junpinhui_token_cache.json");
 
 const wechat = new WeChatServer({
-  url: process.env.wx_server_url || "http://172.23.0.2:8000",
+  url: process.env.wx_server_url || "http://172.17.0.1:8000",
   appid: MINI_APP_ID,
   auth: process.env.wx_auth || "your-api-key",
 });
 // garden 侧要用习酒 appid 取 code / 取加密密钥
 const gardenWechat = new WeChatServer({
-  url: process.env.wx_server_url || "http://172.23.0.2:8000",
+  url: process.env.wx_server_url || "http://172.17.0.1:8000",
   appid: GARDEN_APP_ID,
   auth: process.env.wx_auth || "your-api-key",
 });

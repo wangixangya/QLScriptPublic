@@ -36,7 +36,7 @@ const path = require("path");
 
 const CK_NAME = "tclx_lc";
 const APP = { name: "同程旅行里程签到", appid: "wx336dcaf6a1ecf632" };
-const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.17.0.1:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const DEFAULT_OPENID = process.env.wx_openid || "";
 

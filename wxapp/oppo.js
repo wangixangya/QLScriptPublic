@@ -9,7 +9,7 @@ cron: 21 8 * * *
 变量值：wx_server 里的 openid，多账号用 & 或换行
 
 依赖变量：
-wx_server_url  默认 http://172.23.0.2:8000
+wx_server_url  默认 http://172.17.0.1:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 签到活动 id 会按月轮换（原来硬编码的 2061050217641549824 是 2026-06 那期，
@@ -34,7 +34,7 @@ const APP = {
     appid: "wxe705c556754a1de2",
     version: 361,
 };
-const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.17.0.1:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 const MINI_API = "https://omoapplet-api-cn.heytap.com";
 const H5_API = "https://hd.opposhop.cn";

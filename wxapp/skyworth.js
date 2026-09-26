@@ -21,7 +21,7 @@ const path = require("path");
 const CK_NAME = process.env.skyworth ? "skyworth" : "chuangwei";
 const MINI_APP_ID = "wxff438d3c60c63fb6";
 const PACKAGE_VERSION = "371";
-const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.17.0.1:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 
 const TOKEN_CACHE_FILE = path.join(__dirname, "skyworth_token_cache.json");

@@ -7,7 +7,7 @@ cron: 12 9 * * *
 变量值：wx_server 里的 openid/账号标识，多账号用 & 或换行分隔（可加 #备注）
 
 依赖变量：
-wx_server_url  默认 http://172.23.0.2:8000
+wx_server_url  默认 http://172.17.0.1:8000
 wx_auth        必填，wx_server 鉴权值
 ------------------------------------------
 契约（appid wx444ddc3d46767f9d，host api.dfmeifeng.com）：
@@ -49,7 +49,7 @@ const EP_GET_INFO = "/wechat/miniapp/member/getInfo";
 const EP_SIGN_INFO = "/wechat/miniapp/signin/getSignInfo";
 const EP_SIGN_IN = "/wechat/miniapp/signin/signIn";
 
-const WX_SERVER_URL = process.env.wx_server_url || "http://172.23.0.2:8000";
+const WX_SERVER_URL = process.env.wx_server_url || "http://172.17.0.1:8000";
 const WX_AUTH = process.env.wx_auth || "";
 
 const wechat = new WeChatServer({ url: WX_SERVER_URL, appid: MINI_APP_ID, auth: WX_AUTH });

@@ -20,7 +20,7 @@ const path = require("path");
 const ckName = "huazhu";
 const MINI_APP_ID = "wx286efc12868f2559";
 const PACKAGE_VERSION = "580";
-const WX_SERVER_URL = (process.env.wx_server_url || "http://172.23.0.2:8000").replace(/\/$/, "");
+const WX_SERVER_URL = (process.env.wx_server_url || "http://172.17.0.1:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
 
 const TOKEN_CACHE_FILE = path.join(__dirname, "huazhu_token_cache.json");

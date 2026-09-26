@@ -328,7 +328,7 @@ def mask_openid(openid: str) -> str:
 # === YYB-Go 兼容层 ===
 import os as _yyb_os
 import json as _yyb_json
-_YWB_SERVER = "172.23.0.2:8000"
+_YWB_SERVER = "172.17.0.1:8000"
 
 def _yyb_accounts():
     result = []
