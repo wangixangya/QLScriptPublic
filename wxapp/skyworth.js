@@ -130,6 +130,23 @@ async function request(options) {
 }
 
 async function getWxCode(openid) {
+// === YYB-Go 取码适配 ===
+  if (openid && openid.includes("@")) {
+    const _yybParts = openid.split("@");
+    const _yybServer = _yybParts[0].replace(/^https?:\//, "");
+    const _yybRef = _yybParts[_yybParts.length - 1];
+    const _yybRes = await request({
+      method: "POST",
+      url: `http://${_yybServer}/wxapp/getCode`,
+      headers: { "content-type": "application/json" },
+      data: { app_id: MINI_APP_ID, ref: _yybRef },
+    });
+    if (_yybRes.data?.code === 0) {
+      const _yybCode = _yybRes.data?.data?.result?.code || _yybRes.data?.code || "";
+      return { status: 200, data: { code: _yybCode, data: { code: _yybCode } } };
+    }
+    throw new Error(`YYB-Go 获取code失败: ${JSON.stringify(_yybRes.data)}`);
+  }
   if (!WX_AUTH) throw new Error("未配置 wx_auth，无法从 wx_server 获取 code");
   const { status, data } = await request({
     method: "POST",
@@ -274,7 +291,15 @@ class Skyworth {
 }
 
 async function main() {
-  const accounts = splitAccounts(process.env.skyworth || process.env.chuangwei || "");
+  let accounts = splitAccounts(process.env.skyworth || process.env.chuangwei || "");
+// === YYB-Go 兼容层 ===
+if (!accounts.length) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        accounts = yybServers;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
   if (!accounts.length) {
     $.log("未找到变量 skyworth 或 chuangwei");
     return;

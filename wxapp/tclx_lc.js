@@ -97,6 +97,23 @@ async function request(options) {
 }
 
 async function getWxCode(appid, openid) {
+// === YYB-Go 取码适配 ===
+  if (openid && openid.includes("@")) {
+    const _yybParts = openid.split("@");
+    const _yybServer = _yybParts[0].replace(/^https?:\//, "");
+    const _yybRef = _yybParts[_yybParts.length - 1];
+    const _yybRes = await request({
+      method: "POST",
+      url: `http://${_yybServer}/wxapp/getCode`,
+      headers: { "content-type": "application/json" },
+      data: { app_id: APP.appid, ref: _yybRef },
+    });
+    if (_yybRes.data?.code === 0) {
+      const _yybCode = _yybRes.data?.data?.result?.code || _yybRes.data?.code || "";
+      return { status: 200, data: { code: _yybCode, data: { code: _yybCode } } };
+    }
+    throw new Error(`YYB-Go 获取code失败: ${JSON.stringify(_yybRes.data)}`);
+  }
     if (!WX_AUTH) throw new Error("未配置 wx_auth");
     const headers = { auth: WX_AUTH, "content-type": "application/json" };
     let lastMsg = "";
@@ -266,10 +283,18 @@ async function runAccount(openid, index) {
 }
 
 (async () => {
-    const accounts = (process.env[CK_NAME] || DEFAULT_OPENID || "")
+    let accounts = (process.env[CK_NAME] || DEFAULT_OPENID || "")
         .split((process.env[CK_NAME] || "").includes("\n") ? "\n" : "&")
         .map((x) => x.trim())
         .filter(Boolean);
+// === YYB-Go 兼容层 ===
+if (!accounts.length) {
+    const yybServers = (process.env.YYB_SERVER || "").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (yybServers.length) {
+        accounts = yybServers;
+        $.log("YYB-Go: 加载了 " + yybServers.length + " 个账号");
+    }
+}
     if (!accounts.length) {
         $.log(`未配置 ${CK_NAME}`);
         await $.done();
