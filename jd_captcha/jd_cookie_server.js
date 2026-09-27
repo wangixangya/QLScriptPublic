@@ -37,10 +37,26 @@ async function wskeyToCookie(wsck) {
 const PORT = parseInt(process.env.PORT || '8899');
 const QL_DB = process.env.QL_DB || '/root/docker/ql/data/db/database.sqlite';
 const SQLITE = process.env.SQLITE || 'sqlite3';
+const QQ_NOTIFY_URL = process.env.QQ_NOTIFY_URL || 'http://127.0.0.1:3000/send_private_msg';
+const QQ_NOTIFY_TOKEN = process.env.QQ_NOTIFY_TOKEN || 'sg_qq_token_2026';
+const QQ_USER = process.env.QQ_USER || '949194446';
 
 let lastResult = { ts: '', msg: '' };
 
 function log(...a) { console.log(new Date().toISOString().slice(11, 19), ...a); }
+
+// 回传结果推 QQ(走 napcat)
+function notifyQQ(text) {
+  const body = JSON.stringify({ user_id: Number(QQ_USER), message: { type: 'text', data: { text } } });
+  const u = new URL(QQ_NOTIFY_URL);
+  const req = http.request({
+    hostname: u.hostname, port: u.port || 80, path: u.pathname,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': QQ_NOTIFY_TOKEN }
+  });
+  req.on('error', e => log('[qq err]', e.message));
+  req.write(body); req.end();
+}
 
 function qlEnvs() {
   try {
@@ -150,18 +166,21 @@ const server = http.createServer((req, res) => {
           } catch (e) {
             lastResult = { ts: new Date().toISOString(), msg: '❌ [APK回传] wskey转pt_key失败: ' + e.message };
             log('[conv err]', e.message);
+            notifyQQ('❌ 京东登录回传失败\nwskey转pt_key失败: ' + e.message + '\npin=' + pin);
             return send(200, JSON.stringify({ ok: false, msg: lastResult.msg }));
           }
         }
-        if (!/pt_key=/.test(cookie)) return send(200, JSON.stringify({ ok: false, msg: 'recv: 未收到有效凭证' }));
+        if (!/pt_key=/.test(cookie)) { notifyQQ('❌ 京东登录回传失败\n未收到有效凭证(wskey/full_ck 均无效)'); return send(200, JSON.stringify({ ok: false, msg: 'recv: 未收到有效凭证' })); }
         const id = writeCookie(cookie, pin);
         const p = pin || (cookie.match(/pt_pin=([^;]+)/) || [])[1] || '';
         lastResult = { ts: new Date().toISOString(), msg: `✅ [APK回传] 已写入青龙 Envs.id=${id} pin=${p}` };
         log('[APK RECV] wskey=' + (wskey ? 'yes' : 'no') + ' pin=' + p);
+        notifyQQ('✅ 京东登录回传成功\n已写入青龙 JD_COOKIE\npin=' + p + '\nenv_id=' + id);
         return send(200, JSON.stringify({ ok: true, msg: lastResult.msg }));
       } catch (e) {
         lastResult = { ts: new Date().toISOString(), msg: '❌ recv: ' + e.message };
         log('[recv err]', e.message);
+        notifyQQ('❌ 京东登录回传异常\n' + e.message);
         return send(200, JSON.stringify({ ok: false, msg: e.message }));
       }
     });
