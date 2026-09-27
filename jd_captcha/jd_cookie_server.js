@@ -1,7 +1,38 @@
 // 京东 Cookie 安全录入页：仅写入本机青龙数据库，不发任何第三方
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const { execSync } = require('child_process');
+
+// wskey -> pt_key 转换(调 djun97 中继, wskey 仅此一跳到第三方换 token)
+const CONVERT_URL = process.env.CONVERT_URL || 'https://wskey.djun97.top/convert';
+function convertWskey(wsck) {
+  // wsck: 'pin=xxx;wskey=yyy;' 或 'wskey=yyy;pin=xxx;'
+  const body = JSON.stringify({ wsck });
+  const u = new URL(CONVERT_URL);
+  const opt = {
+    method: 'POST',
+    hostname: u.hostname, port: u.port || 443, path: u.pathname,
+    headers: { 'Content-Type': 'application/json', 'User-Agent': 'JDHelper/1.0' }
+  };
+  return new Promise((resolve, reject) => {
+    const req = https.request(opt, (res) => {
+      let d = ''; res.on('data', c => d += c); res.on('end', () => {
+        try { resolve(JSON.parse(d)); } catch (e) { reject(new Error('convert 返回解析失败: ' + d.slice(0, 120))); }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(15000, () => req.destroy(new Error('convert 超时')));
+    req.write(body); req.end();
+  });
+}
+// 把 wskey 转成最终可用的 pt_key cookie; 失败抛错
+async function wskeyToCookie(wsck) {
+  const r = await convertWskey(wsck);
+  if (!r || !r.success) throw new Error('convert 失败: ' + (r && r.message || '未知'));
+  if (!r.cookie || !/pt_key=/.test(r.cookie)) throw new Error('convert 返回无 pt_key');
+  return r.cookie;
+}
 
 const PORT = parseInt(process.env.PORT || '8899');
 const QL_DB = process.env.QL_DB || '/root/docker/ql/data/db/database.sqlite';
@@ -20,10 +51,18 @@ function qlEnvs() {
   } catch (e) { return []; }
 }
 
-function writeCookie(cookie) {
-  // cookie 形如 pt_key=...; pt_pin=...;
-  const m = cookie.match(/pt_pin=([^;]+)/);
-  const pin = m ? decodeURIComponent(m[1]) : null;
+function writeCookie(cookie, realPin) {
+  // cookie 形如 pt_key=...; pt_pin=...;  realPin: App 直传的真实 pin(用于 djun97 脱敏时回填)
+  // djun97 把 pin 脱敏成 ***** 或 URL编码的 %2A%2A%2A%2A%2A%2A, 用 App 真实 pin 回填保证可匹配更新
+  let decoded = decodeURIComponent(cookie);
+  let m = decoded.match(/pt_pin=([^;]+)/);
+  let pin = m ? m[1] : null;
+  const masked = (!pin || /^\*+$/.test(pin) || /^%2A+$/i.test(pin || ''));
+  if (masked && realPin) {
+    pin = realPin;
+    // 把脱敏的 pt_pin 段替换成真实 pin(兼容明文 ***** 与 %2A%2A%2A...)
+    cookie = cookie.replace(/pt_pin=([^;]*)/, 'pt_pin=' + realPin);
+  }
   if (!pin) throw new Error('cookie 中未找到 pt_pin');
   const envs = qlEnvs();
   const hit = envs.find(e => e.name === 'JD_COOKIE' && e.value.includes('pt_pin=' + pin));
@@ -35,7 +74,8 @@ function writeCookie(cookie) {
     // 取现有最大 id + 1
     const maxId = envs.reduce((mx, e) => Math.max(mx, parseInt(e.id) || 0), 0);
     const newId = maxId + 1;
-    execSync(`${SQLITE} ${QL_DB} "INSERT INTO Envs(id,name,value,status,remarks) VALUES(${newId},'JD_COOKIE','${cookie.replace(/'/g, "''")}',1,'apk_recv');"`);
+    const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
+    execSync(`${SQLITE} ${QL_DB} "INSERT INTO Envs(id,name,value,status,remarks,createdAt,updatedAt) VALUES(${newId},'JD_COOKIE','${cookie.replace(/'/g, "''")}',1,'apk_recv','${now}','${now}');"`);
     log('[INSERT NEW] id=' + newId + ' pin=' + pin);
     return newId;
   }
@@ -92,18 +132,30 @@ const server = http.createServer((req, res) => {
   if (req.method === 'GET' && (req.url === '/' || req.url.startsWith('/?'))) return send(200, HTML, 'text/html; charset=utf-8');
   if (req.method === 'GET' && req.url.startsWith('/last')) return send(200, JSON.stringify(lastResult), 'application/json');
   if (req.method === 'POST' && (req.url === '/recv' || req.url === '/api/Doraemon/bigNai/wskey/service')) {
-    let body = ''; req.on('data', c => body += c); req.on('end', () => {
+    let body = ''; req.on('data', c => body += c); req.on('end', async () => {
       try {
         const j = JSON.parse(body || '{}');
         // APK 提交体: {wskey, pin, full_ck, callback_id}
         const wskey = j.wskey || '';
         const pin = j.pin || '';
-        const fullCk = j.full_ck || '';
+        let fullCk = j.full_ck || '';
+        // 1) 优先用 App 直传的完整 ck(含 pt_key)
         let cookie = fullCk.trim();
-        if (!cookie && wskey && pin) cookie = `wskey=${wskey};pin=${pin};`;
-        if (!/pt_key=|wskey=/.test(cookie)) return send(200, JSON.stringify({ ok: false, msg: 'recv: 未收到有效凭证' }));
-        const id = writeCookie(cookie);
-        const p = (cookie.match(/pt_pin=([^;]+)/) || [])[1] || pin;
+        // 2) 只有 wskey 时: 现场转成 pt_key 再落库
+        if (!/pt_key=/.test(cookie) && wskey && pin) {
+          const wsck = `pin=${pin};wskey=${wskey};`;
+          try {
+            cookie = await wskeyToCookie(wsck);
+            log('[conv] wskey->pt_key ok pin=' + pin);
+          } catch (e) {
+            lastResult = { ts: new Date().toISOString(), msg: '❌ [APK回传] wskey转pt_key失败: ' + e.message };
+            log('[conv err]', e.message);
+            return send(200, JSON.stringify({ ok: false, msg: lastResult.msg }));
+          }
+        }
+        if (!/pt_key=/.test(cookie)) return send(200, JSON.stringify({ ok: false, msg: 'recv: 未收到有效凭证' }));
+        const id = writeCookie(cookie, pin);
+        const p = pin || (cookie.match(/pt_pin=([^;]+)/) || [])[1] || '';
         lastResult = { ts: new Date().toISOString(), msg: `✅ [APK回传] 已写入青龙 Envs.id=${id} pin=${p}` };
         log('[APK RECV] wskey=' + (wskey ? 'yes' : 'no') + ' pin=' + p);
         return send(200, JSON.stringify({ ok: true, msg: lastResult.msg }));
@@ -115,6 +167,26 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
+  if (req.method === 'POST' && req.url === '/convert') {
+    let body = ''; req.on('data', c => body += c); req.on('end', async () => {
+      try {
+        const j = JSON.parse(body || '{}');
+        // App convertWsck 期望: {wsck:"pin=..;wskey=..;"} -> {success,cookie,message}
+        const wsck = j.wsck || '';
+        if (!/wskey=/.test(wsck)) return send(200, JSON.stringify({ success: false, message: '缺少 wskey' }));
+        const cookie = await wskeyToCookie(wsck);
+        const pin = (cookie.match(/pt_pin=([^;]+)/) || [])[1] || '';
+        lastResult = { ts: new Date().toISOString(), msg: `✅ [convert] pin=${pin}` };
+        log('[convert ok] pin=' + pin);
+        return send(200, JSON.stringify({ success: true, cookie, message: 'JD_WSCK转换成功' }));
+      } catch (e) {
+        lastResult = { ts: new Date().toISOString(), msg: '❌ convert: ' + e.message };
+        log('[convert err]', e.message);
+        return send(200, JSON.stringify({ success: false, cookie: '', message: e.message }));
+      }
+    });
+    return;
+  }
   if (req.method === 'POST' && req.url === '/set') {
     let body = ''; req.on('data', c => body += c); req.on('end', () => {
       try {
@@ -122,8 +194,8 @@ const server = http.createServer((req, res) => {
         const ck = j.cookie || '';
         if (!/pt_key=/.test(ck)) return send(400, JSON.stringify({ ok: false, msg: 'Cookie 缺少 pt_key' }));
         const cookie = ck.replace(/\s+/g, ' ').trim();
-        const id = writeCookie(cookie);
         const pin = (cookie.match(/pt_pin=([^;]+)/) || [])[1];
+        const id = writeCookie(cookie, pin);
         lastResult = { ts: new Date().toISOString(), msg: `✅ 已写入青龙 Envs.id=${id} pin=${pin}` };
         log('[WRITE OK] id=' + id + ' pin=' + pin);
         return send(200, JSON.stringify({ ok: true, msg: lastResult.msg }));
