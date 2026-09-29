@@ -46,7 +46,7 @@ send_qq() {
 上游无新提交，跳过。"
         exit 0
     fi
-    git merge upstream/main --no-edit 2>&1
+    git merge -X ours upstream/main --no-edit 2>&1 || { git merge --abort 2>/dev/null; log "  上游合并冲突,已放弃本次合并(保留本地YYB适配)"; }
     log "  上游已合并: $(git rev-parse --short upstream/main)"
 
     # 2. JS 改写
