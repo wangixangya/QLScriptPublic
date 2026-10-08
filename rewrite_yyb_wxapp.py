@@ -20,10 +20,73 @@ def process_js(src_file):
     # 修改默认 URL: 8787 -> 8000 yyb-go
     content = content.replace('http://192.168.31.196:8787', 'http://' + YWB_SERVER)
     content = content.replace('"8787"', '"8000"')
-    
+
+    # 部署目录是扁平的 (yyb_wxapp/), require 路径必须相对当前文件解析:
+    #   ../wxapp/X  -> ./X   (wcs.js 等已拷贝到同级)
+    #   ../tools/X  -> ./X   (env.js / sendNotify.js 同上)
+    # 不改写会导致 Node 报 Cannot find module '../wxapp/wcs.js' (见 2026-09-17 植白说任务失败).
+    content = re.sub(r'require\("\.\./wxapp/([^"]+)"\)', r'require("./\1")', content)
+    content = re.sub(r'require\("\.\./tools/([^"]+)"\)', r'require("./\1")', content)
+
+    # === YYB 依赖兜底注入 (幂等) ===
+    # 上游脚本常漏 require path/fs，以及漏定义 readCache/writeCache，
+    # 导致运行时 'path is not defined' / 'readCache is not defined'。
+    # 每日同步会 rm -rf 整个 yyb_wxapp 再 cp，手动改容器文件会被覆盖，
+    # 因此在此处(真源)注入，每次同步自动带正确依赖。
+    content = inject_dependency_shims(content)
+
     with open(dst_file, 'w', encoding='utf-8') as f:
         f.write(content)
     return dst_file
+
+
+def inject_dependency_shims(content):
+    """为 JS 脚本幂等注入缺失的 path/fs require 与 readCache/writeCache 兜底实现。"""
+    marker = "// === YYB dependency shim ==="
+    if marker in content:
+        return content
+
+    # 1) 缺 require path/fs
+    needs_path = bool(re.search(r'(?<![.\w])path\.', content)) and 'require("path")' not in content
+    needs_fs = bool(re.search(r'(?<![.\w])fs\.', content)) and 'require("fs")' not in content
+    shim_lines = []
+    if needs_path:
+        shim_lines.append('const path = require("path");')
+    if needs_fs:
+        shim_lines.append('const fs = require("fs");')
+
+    # 2) 调用了 readCache/writeCache 但未定义 (既不是 require 也不是 function/const 声明)
+    cache_func_re = re.compile(r'(?:function\s+(readCache|writeCache)|const\s+(readCache|writeCache)\s*=|(readCache|writeCache)\s*[:=]\s*function|require\(["\']([^"\']*cache[^"\']*)["\']\))')
+    uses_read = bool(re.search(r'(?<![.\w])readCache\s*\(', content))
+    uses_write = bool(re.search(r'(?<![.\w])writeCache\s*\(', content))
+    defined_cache = bool(cache_func_re.search(content))
+    need_cache_shim = (uses_read or uses_write) and not defined_cache
+    if need_cache_shim:
+        # cache shim 自身用到 path.join / fs，强制带上 require
+        needs_path = True
+        needs_fs = True
+        shim_lines.append('''
+const _yybCacheFile = path.join(__dirname, "yyb_cache.json");
+function readCache() {
+    try { return JSON.parse(fs.readFileSync(_yybCacheFile, "utf8")); }
+    catch (e) { return {}; }
+}
+function writeCache(obj) {
+    try { fs.writeFileSync(_yybCacheFile, JSON.stringify(obj, null, 2)); } catch (e) {}
+}''')
+
+    if not shim_lines:
+        return content
+
+    shim = "\n" + marker + "\n" + "\n".join(shim_lines) + "\n"
+    # 插到文件顶部 require 区之后 (找第一个 require 行后插入，否则插到最前)
+    first_req = re.search(r'require\(', content)
+    if first_req:
+        pos = content.find("\n", first_req.start())
+        content = content[:pos+1] + shim + content[pos+1:]
+    else:
+        content = shim + content
+    return content
 
 def process_js_fallback(src_file):
     """为 JS 脚本添加 YYB_SERVER 回退"""
