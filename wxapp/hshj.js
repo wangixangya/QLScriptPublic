@@ -12,6 +12,9 @@
 'use strict';
 
 const axios = require('axios');
+
+// === YYB dependency shim ===
+const fs = require("fs");
 const fs = require('fs');
 const pathMod = require('path');
 

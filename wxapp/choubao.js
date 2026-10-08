@@ -24,6 +24,10 @@ WeChatCodeServer 填写wx_server_url wx_auth 用于获取code 因为抓到的有
 const {
     Env
 } = require("./env")
+
+// === YYB dependency shim ===
+const path = require("path");
+const fs = require("fs");
 const $ = new Env("臭宝乐园");
 const WeChatServer = require("./wcs.js");
 let ckName = `choubaoleyuan`;

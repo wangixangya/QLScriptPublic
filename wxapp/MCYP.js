@@ -1,6 +1,10 @@
 // name: 名创优品
 // cron: 30 8,20 * * *
 const axios = require('axios');
+
+// === YYB dependency shim ===
+const path = require("path");
+const fs = require("fs");
 const CryptoJS = require('crypto-js');
 const fs = require('fs');
 const path = require('path');

@@ -21,6 +21,10 @@
  */
 
 const axios = require('axios');
+
+// === YYB dependency shim ===
+const path = require("path");
+const fs = require("fs");
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');

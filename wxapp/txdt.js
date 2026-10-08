@@ -18,6 +18,17 @@ wx_auth        必填，wx_server 鉴权值
 */
 
 const { Env } = require("./env.js");
+
+// === YYB dependency shim ===
+
+const _yybCacheFile = path.join(__dirname, "yyb_cache.json");
+function readCache() {
+    try { return JSON.parse(fs.readFileSync(_yybCacheFile, "utf8")); }
+    catch (e) { return {}; }
+}
+function writeCache(obj) {
+    try { fs.writeFileSync(_yybCacheFile, JSON.stringify(obj, null, 2)); } catch (e) {}
+}
 const $ = new Env("腾讯地图");
 const axios = require("axios");
 const crypto = require("crypto");
