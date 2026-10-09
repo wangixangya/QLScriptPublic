@@ -33,6 +33,7 @@ def process_js(src_file):
     # 导致运行时 'path is not defined' / 'readCache is not defined'。
     # 每日同步会 rm -rf 整个 yyb_wxapp 再 cp，手动改容器文件会被覆盖，
     # 因此在此处(真源)注入，每次同步自动带正确依赖。
+    content = fix_wx_endpoint(content)
     content = inject_dependency_shims(content)
 
     with open(dst_file, 'w', encoding='utf-8') as f:
@@ -40,53 +41,164 @@ def process_js(src_file):
     return dst_file
 
 
-def inject_dependency_shims(content):
-    """为 JS 脚本幂等注入缺失的 path/fs require 与 readCache/writeCache 兜底实现。"""
-    marker = "// === YYB dependency shim ==="
-    if marker in content:
+def fix_wx_endpoint(content):
+    """把"调 /wx/getuserinfo 却从中取登录 code"的脚本改成 /wx/code。
+
+    yyb-go 两个端点返回不同:
+      /wx/code        -> data.result.code   (真正的微信登录 code)
+      /wx/getuserinfo -> data.user_info     (只有用户信息, 不含 code)
+    部分上游脚本调 getuserinfo 却要 code, 永远取不到 -> "获取code失败"。
+
+    注意: 取码语句可能写在 ajax 调用之前(函数式 .then 写法),
+    因此这里在全文件范围判定并替换, 不依赖局部位置。
+    """
+    uses_wx = ("/wx/getuserinfo" in content) or ("/wx/code" in content)
+    if not uses_wx:
         return content
 
-    # 1) 缺 require path/fs
-    needs_path = bool(re.search(r'(?<![.\w])path\.', content)) and 'require("path")' not in content
-    needs_fs = bool(re.search(r'(?<![.\w])fs\.', content)) and 'require("fs")' not in content
-    shim_lines = []
-    if needs_path:
-        shim_lines.append('const path = require("path");')
-    if needs_fs:
-        shim_lines.append('const fs = require("fs");')
+    # 该文件是否真的"取 code"(而非只要 user_info)
+    takes_code = bool(re.search(r"\bconst\s+code\s*=|\blet\s+code\s*=|\bcode\s*\|\||result\.code", content))
+    if not takes_code:
+        return content
+    # 已经能取到 result.code 的不动
+    if "data?.data?.result?.code" in content or "result?.result?.code" in content:
+        return content
 
-    # 2) 调用了 readCache/writeCache 但未定义 (既不是 require 也不是 function/const 声明)
-    cache_func_re = re.compile(r'(?:function\s+(readCache|writeCache)|const\s+(readCache|writeCache)\s*=|(readCache|writeCache)\s*[:=]\s*function|require\(["\']([^"\']*cache[^"\']*)["\']\))')
-    uses_read = bool(re.search(r'(?<![.\w])readCache\s*\(', content))
-    uses_write = bool(re.search(r'(?<![.\w])writeCache\s*\(', content))
+    out = content.replace("/wx/getuserinfo", "/wx/code")
+    # 取码路径: data.data?.code / data.data.code / data?.data?.code -> data?.data?.result?.code
+    if "data?.data?.result?.code" in out:
+        return out
+    out = re.sub(r"(?<![?.\w])data\??\.data\??\.code\b", "data?.data?.result?.code || data?.data?.code", out)
+    out = re.sub(r"(?<![?.\w])data\.code\b", "data?.data?.result?.code || data?.code", out, count=1)
+    return out
+
+
+def inject_dependency_shims(content):
+    """为 JS 脚本幂等注入 ref 拦截器 / path,fs require / readCache,writeCache 兜底。
+
+    注意: 每一项独立判断、独立幂等, 不允许"marker 存在就整体早退"——
+    否则历史上注入过残缺 shim(如 cache 用了 path 却没 require)的文件将永远无法自愈。
+    """
+    dep_marker = "// === YYB dependency shim ==="
+    ref_marker = "// === YYB ref auto-inject ==="
+
+    additions = []   # 本次需要新增的代码片段
+
+    # ---- 0) 取码请求缺 ref ----
+    # yyb-go 后端升级后 /wx/code 与 /wx/getuserinfo 强制要求 body 带 ref(账号 token)。
+    # 后端仅用 ref 选账号, openid 字段被忽略; 但多账号共用同一 endpoint,
+    # 必须按每个 openid(=账号整行 server@ref) 里的 @ref 精确取, 否则串号。
+    # 用 axios 拦截器统一补, 不改任何业务代码。
+    uses_wx_ep = re.search(r'/wx/(?:code|getuserinfo)', content) is not None
+    uses_axios = re.search(r'require\(\s*["\']axios["\']\s*\)', content) is not None
+    already_sends_ref = bool(re.search(r'\bref\s*[:=]', content)) or ref_marker in content
+    need_ref = uses_wx_ep and uses_axios and not already_sends_ref
+    if need_ref:
+        additions.append("""
+// === YYB ref auto-inject ===
+// yyb-go 后端 /wx/code 与 /wx/getuserinfo 要求 body 带 ref(账号 token)。
+// openid 在 YYB 模式下是账号整行 "server@ref", 从 @ 后取 ref 精确注入(避免串号)。
+try {
+    const _yybAxios = require("axios");
+    if (_yybAxios && _yybAxios.defaults && !_yybAxios.defaults.__yybRefPatched) {
+        _yybAxios.defaults.__yybRefPatched = true;
+        const _yybRefOf = (v) => {
+            const s = String(v || "");
+            const at = s.lastIndexOf("@");
+            return at >= 0 ? s.slice(at + 1).trim() : "";
+        };
+        const _yybPatch = (cfg) => {
+            try {
+                const url = String((cfg && cfg.url) || "");
+                if (url.indexOf("/wx/code") >= 0 || url.indexOf("/wx/getuserinfo") >= 0) {
+                    const d = cfg.data;
+                    if (d && typeof d === "object" && !d.ref) {
+                        const ref = _yybRefOf(d.openid || d.openId || d.id || d.account);
+                        if (ref) d.ref = ref;
+                        // /wx/code 要求 app_id(下划线), 上游脚本普遍写成 appid
+                        if (!d.app_id && (d.appid || d.appId)) d.app_id = d.appid || d.appId;
+                    } else if (typeof d === "string" && d.indexOf("ref") < 0) {
+                        const obj = JSON.parse(d);
+                        const ref = _yybRefOf(obj.openid || obj.openId || obj.id || obj.account);
+                        if (ref) { obj.ref = ref; cfg.data = JSON.stringify(obj); }
+                        if (!obj.app_id && (obj.appid || obj.appId)) { obj.app_id = obj.appid || obj.appId; cfg.data = JSON.stringify(obj); }
+                    }
+                }
+            } catch (e) {}
+            return cfg;
+        };
+        if (_yybAxios.interceptors && _yybAxios.interceptors.request) {
+            _yybAxios.interceptors.request.use(_yybPatch);
+        }
+        if (typeof _yybAxios.create === "function") {
+            const _origCreate = _yybAxios.create.bind(_yybAxios);
+            _yybAxios.create = function () {
+                const inst = _origCreate.apply(null, arguments);
+                try { if (inst.interceptors && inst.interceptors.request) inst.interceptors.request.use(_yybPatch); } catch (e) {}
+                return inst;
+            };
+        }
+    }
+} catch (e) {}
+// === end YYB ref auto-inject ===
+""")
+
+    # ---- 1) 缺 require path / fs ----
+    # 注意: 注入的 cache shim 自身会用 path./fs., 因此这里必须先看"注入后"的需求。
+    # 注意: 上游单/双引号混用, 且可能是 const fs = require('fs') 之外的声明方式,
+    # 这里用"是否已声明该标识符"判定, 避免重复注入导致 SyntaxError。
+    def _declared(name):
+        return bool(re.search(r'(?:const|let|var)\s+' + name + r'\s*[=:]', content)) or bool(
+            re.search(r'require\(\s*["\']' + name + r'["\']\s*\)', content))
+    needs_path = bool(re.search(r'(?<![.\w])path\.', content)) and not _declared('path')
+    needs_fs = bool(re.search(r'(?<![.\w])fs\.', content)) and not _declared('fs')
+
+    # ---- 2) 调用 readCache/writeCache 但未定义 ----
+    cache_func_re = re.compile(r'(?:function\s+(readCache|writeCache)|const\s+(readCache|writeCache)\s*=|(readCache|writeCache)\s*[:=]\s*function|require\(["\'][^"\']*cache[^"\']*["\']\))')
+    uses_cache = bool(re.search(r'(?<![.\w])readCache\s*\(', content)) or bool(re.search(r'(?<![.\w])writeCache\s*\(', content))
     defined_cache = bool(cache_func_re.search(content))
-    need_cache_shim = (uses_read or uses_write) and not defined_cache
+    need_cache_shim = uses_cache and not defined_cache
     if need_cache_shim:
-        # cache shim 自身用到 path.join / fs，强制带上 require
-        needs_path = True
+        needs_path = True   # cache shim 用 path.join / fs
         needs_fs = True
-        shim_lines.append('''
-const _yybCacheFile = path.join(__dirname, "yyb_cache.json");
+
+    dep_lines = []
+    if need_cache_shim:
+        # 关键: require 必须排在 cache 函数之前
+        dep_lines.append('const path = require("path");')
+        dep_lines.append('const fs = require("fs");')
+        dep_lines.append("""
+const _yybCacheFile = path.join(__dirname, "_yyb_cache.json");
 function readCache() {
     try { return JSON.parse(fs.readFileSync(_yybCacheFile, "utf8")); }
     catch (e) { return {}; }
 }
 function writeCache(obj) {
     try { fs.writeFileSync(_yybCacheFile, JSON.stringify(obj, null, 2)); } catch (e) {}
-}''')
+}
+""")
+    else:
+        if needs_path:
+            dep_lines.append('const path = require("path");')
+        if needs_fs:
+            dep_lines.append('const fs = require("fs");')
 
-    if not shim_lines:
+    if dep_lines and dep_marker not in content:
+        additions.append("\n" + dep_marker + "\n" + "\n".join(dep_lines) + "\n")
+
+    if not additions:
         return content
 
-    shim = "\n" + marker + "\n" + "\n".join(shim_lines) + "\n"
-    # 插到文件顶部 require 区之后 (找第一个 require 行后插入，否则插到最前)
+    shim = "\n" + "\n".join(additions)
+    # 插到文件顶部第一个 require 行之后 (require 必须在任何使用之前)
     first_req = re.search(r'require\(', content)
     if first_req:
         pos = content.find("\n", first_req.start())
-        content = content[:pos+1] + shim + content[pos+1:]
+        content = content[:pos + 1] + shim + content[pos + 1:]
     else:
         content = shim + content
     return content
+
 
 def process_js_fallback(src_file):
     """为 JS 脚本添加 YYB_SERVER 回退"""
