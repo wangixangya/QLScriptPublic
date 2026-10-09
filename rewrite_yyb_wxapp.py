@@ -412,7 +412,16 @@ def main():
             print("  OK %s" % os.path.basename(py_file))
         except Exception as e:
             print("  FAIL %s: %s" % (os.path.basename(py_file), e))
-    
+
+    # 3b. Copy _lib/ (yyb-ua.js 等公共模块) 到产物目录
+    src_lib = os.path.join(SRC_DIR, "_lib")
+    if os.path.isdir(src_lib):
+        dst_lib = os.path.join(DST_DIR, "_lib")
+        os.makedirs(dst_lib, exist_ok=True)
+        for lib_file in sorted(glob.glob(os.path.join(src_lib, "*"))):
+            shutil.copy(lib_file, os.path.join(dst_lib, os.path.basename(lib_file)))
+            print("  LIB %s" % os.path.basename(lib_file))
+
     # 4. Create README
     readme = """# YYB-Go 兼容版微信小程序脚本
 

@@ -103,6 +103,14 @@ send_qq() {
     cp "$DST_DIR"/sendNotify.js "$QL2_TOOLS"/ 2>/dev/null
     log "  tools 部署完成"
 
+    # 5c. 部署 yyb-ua 模块到 NODE_PATH(deps), 供脚本 require('yyb-ua')
+    QL2_DEPS="/root/docker/ql2/data/deps"
+    mkdir -p "$QL2_DEPS"
+    if [ -f "$DST_DIR"/_lib/yyb-ua.js ]; then
+        cp "$DST_DIR"/_lib/yyb-ua.js "$QL2_DEPS"/yyb-ua.js
+        log "  yyb-ua 模块部署完成"
+    fi
+
     # 6. 验证 YYB 连接
     log "[6/6] 验证 YYB 连接..."
     YYB_HEALTH=$(docker exec qinglong2 wget -qO- --timeout=5 "http://$YYB_SERVER/health" 2>/dev/null || echo "FAIL")
