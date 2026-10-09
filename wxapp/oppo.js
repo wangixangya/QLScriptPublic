@@ -127,8 +127,40 @@ async function request(options) {
     return { status: res.status, headers: res.headers || {}, data: res.data };
 }
 
-async function getWxCode(openid) {
-    if (!WX_AUTH) throw new Error("未配置 wx_auth，无法从 wx_server 获取 code");
+/**
+ * 从 YYB_SERVER 账号行（server@ref）解析出 server 与 ref（账号标识/token）。
+ * 同时兼容旧独立模式（wx_server_url + wx_auth 两变量）。
+ */
+function parseServerRef(raw = "") {
+    const v = String(raw || "").trim();
+    const at = v.indexOf("@");
+    if (at === -1) return null;
+    let server = v.slice(0, at).trim();
+    const ref = v.slice(at + 1).trim();
+    server = server.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+    if (!server || !ref) return null;
+    return { server, ref };
+}
+
+async function getWxCode(rawLine) {
+    const parsed = parseServerRef(rawLine);
+    if (parsed && parsed.server && parsed.ref) {
+        // YYB 模式：server@ref 一体化，ref 即账号标识
+        const { status, data } = await request({
+            method: "POST",
+            url: `http://${parsed.server}/wx/code`,
+            headers: {
+                "content-type": "application/json",
+                Referer: `https://servicewechat.com/${APP.appid}/${APP.version}/page-frame.html`,
+            },
+            data: { ref: parsed.ref, app_id: APP.appid },
+        });
+        const code = data?.data?.code || data?.code;
+        if (status !== 200 || !code) throw new Error(`获取 code 失败 HTTP ${status}: ${short(data)}`);
+        return code;
+    }
+    // 回落旧独立模式
+    if (!WX_AUTH) throw new Error("未配置 wx_auth 或 YYB_SERVER，无法从 wx_server 获取 code");
     const { status, data } = await request({
         method: "POST",
         url: `${WX_SERVER_URL}/wx/code`,
@@ -137,7 +169,7 @@ async function getWxCode(openid) {
             "content-type": "application/json",
             Referer: `https://servicewechat.com/${APP.appid}/${APP.version}/page-frame.html`,
         },
-        data: { appid: APP.appid, openid },
+        data: { ref: WX_AUTH, app_id: APP.appid },
     });
     const code = data?.data?.code || data?.code;
     if (status !== 200 || !code) throw new Error(`获取 code 失败 HTTP ${status}: ${short(data)}`);
@@ -147,6 +179,7 @@ async function getWxCode(openid) {
 class OppoTask {
     constructor(rawAccount, index) {
         this.index = index;
+        this.rawLine = rawAccount;
         this.account = parseAccount(rawAccount);
         this.sessionId = "";
         this.encryptedSession = "";
@@ -242,7 +275,7 @@ class OppoTask {
             return;
         }
 
-        const code = await getWxCode(this.account.openid);
+        const code = await getWxCode(this.rawLine);
         const { status, data } = await request({
             method: "POST",
             url: `${MINI_API}/user/pre/auth`,
