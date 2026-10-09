@@ -17,7 +17,6 @@
 const path = require('path');
 
 // === YYB dependency shim ===
-const path = require("path");
 const { spawnSync } = require('child_process');
 
 const SCRIPT_NAME = '交个朋友签到';

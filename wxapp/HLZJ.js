@@ -26,8 +26,6 @@ const axios = require('axios');
 const path = require("path");
 const fs = require("fs");
 const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
 
 // ========== 配置 ==========
 const HLZJ_APPID = 'wx315431cc3b5e930f';

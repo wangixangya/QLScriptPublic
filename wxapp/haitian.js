@@ -22,7 +22,7 @@ cron: 30 11 * * *
   -> {access_token, refresh_token, uid, success}
   components/login/login.js:180-212(mpWxPhoneLogin)、common/vendor.js:4394(wxRegisterOrLogin)
   注意 edata/iv 必须是【手机号】授权回调里的加密数据（wx_server 走 /wx/getphonenumber
-  返回的 data.raw.encryptedData / data.raw.iv）；早先脚本传的是 /wx/getuserinfo 的
+  返回的 data.raw.encryptedData / data.raw.iv）；早先脚本传的是 /wx/code 的
   【用户资料】加密数据（里面只有 nickName/avatarUrl），服务端解出来没有 phoneNumber，
   固定回 HTTP 500 {"code":"E131","message":"登录失败"}——这不是服务端故障。
   access_token 过期可用 POST buyer-api/passport/token {refresh_token} 续期（vendor.js:13707）。
@@ -39,6 +39,54 @@ cron: 30 11 * * *
 */
 
 const { Env } = require("./env.js");
+
+
+// === YYB ref auto-inject ===
+// yyb-go 后端 /wx/code 与 /wx/getuserinfo 要求 body 带 ref(账号 token)。
+// openid 在 YYB 模式下是账号整行 "server@ref", 从 @ 后取 ref 精确注入(避免串号)。
+try {
+    const _yybAxios = require("axios");
+    if (_yybAxios && _yybAxios.defaults && !_yybAxios.defaults.__yybRefPatched) {
+        _yybAxios.defaults.__yybRefPatched = true;
+        const _yybRefOf = (v) => {
+            const s = String(v || "");
+            const at = s.lastIndexOf("@");
+            return at >= 0 ? s.slice(at + 1).trim() : "";
+        };
+        const _yybPatch = (cfg) => {
+            try {
+                const url = String((cfg && cfg.url) || "");
+                if (url.indexOf("/wx/code") >= 0 || url.indexOf("/wx/getuserinfo") >= 0) {
+                    const d = cfg.data;
+                    if (d && typeof d === "object" && !d.ref) {
+                        const ref = _yybRefOf(d.openid || d.openId || d.id || d.account);
+                        if (ref) d.ref = ref;
+                        // /wx/code 要求 app_id(下划线), 上游脚本普遍写成 appid
+                        if (!d.app_id && (d.appid || d.appId)) d.app_id = d.appid || d.appId;
+                    } else if (typeof d === "string" && d.indexOf("ref") < 0) {
+                        const obj = JSON.parse(d);
+                        const ref = _yybRefOf(obj.openid || obj.openId || obj.id || obj.account);
+                        if (ref) { obj.ref = ref; cfg.data = JSON.stringify(obj); }
+                        if (!obj.app_id && (obj.appid || obj.appId)) { obj.app_id = obj.appid || obj.appId; cfg.data = JSON.stringify(obj); }
+                    }
+                }
+            } catch (e) {}
+            return cfg;
+        };
+        if (_yybAxios.interceptors && _yybAxios.interceptors.request) {
+            _yybAxios.interceptors.request.use(_yybPatch);
+        }
+        if (typeof _yybAxios.create === "function") {
+            const _origCreate = _yybAxios.create.bind(_yybAxios);
+            _yybAxios.create = function () {
+                const inst = _origCreate.apply(null, arguments);
+                try { if (inst.interceptors && inst.interceptors.request) inst.interceptors.request.use(_yybPatch); } catch (e) {}
+                return inst;
+            };
+        }
+    }
+} catch (e) {}
+// === end YYB ref auto-inject ===
 const $ = new Env("海天美味馆小程序");
 const axios = require("axios");
 const fs = require("fs");
@@ -271,7 +319,7 @@ class Task {
     /**
      * 取【手机号】授权的加密数据。
      * /wx/getphonenumber 的 data.raw 里带 encryptedData/iv（等同 getPhoneNumber 回调里的字段）；
-     * 注意不能用 /wx/getuserinfo，那个是用户资料(nickName/avatarUrl)的加密数据，
+     * 注意不能用 /wx/code，那个是用户资料(nickName/avatarUrl)的加密数据，
      * 服务端解不出 phoneNumber，固定回 500 E131 登录失败。
      */
     async getPhoneAuthData() {

@@ -15,7 +15,6 @@ const axios = require('axios');
 
 // === YYB dependency shim ===
 const fs = require("fs");
-const fs = require('fs');
 const pathMod = require('path');
 
 // ==================== 内置 YYB-Go-Enhanced 适配 ====================

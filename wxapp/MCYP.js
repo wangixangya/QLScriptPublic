@@ -6,8 +6,6 @@ const axios = require('axios');
 const path = require("path");
 const fs = require("fs");
 const CryptoJS = require('crypto-js');
-const fs = require('fs');
-const path = require('path');
 
 // ====================== YYB Go 账号（环境变量 YYB_SERVER = 地址@微信账号标识，多行） ======================
 const SERVERS = (process.env.YYB_SERVER || "")

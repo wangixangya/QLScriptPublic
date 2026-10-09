@@ -29,6 +29,54 @@ wx_auth        必填，wx_server 鉴权值
 */
 
 const { Env } = require("./env.js");
+
+
+// === YYB ref auto-inject ===
+// yyb-go 后端 /wx/code 与 /wx/getuserinfo 要求 body 带 ref(账号 token)。
+// openid 在 YYB 模式下是账号整行 "server@ref", 从 @ 后取 ref 精确注入(避免串号)。
+try {
+    const _yybAxios = require("axios");
+    if (_yybAxios && _yybAxios.defaults && !_yybAxios.defaults.__yybRefPatched) {
+        _yybAxios.defaults.__yybRefPatched = true;
+        const _yybRefOf = (v) => {
+            const s = String(v || "");
+            const at = s.lastIndexOf("@");
+            return at >= 0 ? s.slice(at + 1).trim() : "";
+        };
+        const _yybPatch = (cfg) => {
+            try {
+                const url = String((cfg && cfg.url) || "");
+                if (url.indexOf("/wx/code") >= 0 || url.indexOf("/wx/getuserinfo") >= 0) {
+                    const d = cfg.data;
+                    if (d && typeof d === "object" && !d.ref) {
+                        const ref = _yybRefOf(d.openid || d.openId || d.id || d.account);
+                        if (ref) d.ref = ref;
+                        // /wx/code 要求 app_id(下划线), 上游脚本普遍写成 appid
+                        if (!d.app_id && (d.appid || d.appId)) d.app_id = d.appid || d.appId;
+                    } else if (typeof d === "string" && d.indexOf("ref") < 0) {
+                        const obj = JSON.parse(d);
+                        const ref = _yybRefOf(obj.openid || obj.openId || obj.id || obj.account);
+                        if (ref) { obj.ref = ref; cfg.data = JSON.stringify(obj); }
+                        if (!obj.app_id && (obj.appid || obj.appId)) { obj.app_id = obj.appid || obj.appId; cfg.data = JSON.stringify(obj); }
+                    }
+                }
+            } catch (e) {}
+            return cfg;
+        };
+        if (_yybAxios.interceptors && _yybAxios.interceptors.request) {
+            _yybAxios.interceptors.request.use(_yybPatch);
+        }
+        if (typeof _yybAxios.create === "function") {
+            const _origCreate = _yybAxios.create.bind(_yybAxios);
+            _yybAxios.create = function () {
+                const inst = _origCreate.apply(null, arguments);
+                try { if (inst.interceptors && inst.interceptors.request) inst.interceptors.request.use(_yybPatch); } catch (e) {}
+                return inst;
+            };
+        }
+    }
+} catch (e) {}
+// === end YYB ref auto-inject ===
 const $ = new Env("顺丰速运签到");
 const axios = require("axios");
 const crypto = require("crypto");
@@ -132,7 +180,7 @@ class Task {
     async getCode() {
         const { data } = await wechat.getCode(this.account.openid);
         if (data && data.status === false) throw new Error(`wx_server 取code失败: ${data.message || short(data)}`);
-        const code = data?.data?.code || data?.code;
+        const code = data?.data?.result?.code || data?.data?.code || data?.code;
         if (!code || typeof code !== "string") throw new Error(`wx_server 未返回 code: ${short(data)}`);
         return code;
     }
