@@ -8,7 +8,7 @@ const { Env } = require("./env");
 
 
 // === YYB ref auto-inject ===
-// yyb-go 后端 /wx/code 与 /wx/getuserinfo 要求 body 带 ref(账号 token)。
+// yyb-go 后端 /wx/code 与 /wx/code 要求 body 带 ref(账号 token)。
 // openid 在 YYB 模式下是账号整行 "server@ref", 从 @ 后取 ref 精确注入(避免串号)。
 try {
     const _yybAxios = require("axios");
@@ -22,7 +22,7 @@ try {
         const _yybPatch = (cfg) => {
             try {
                 const url = String((cfg && cfg.url) || "");
-                if (url.indexOf("/wx/code") >= 0 || url.indexOf("/wx/getuserinfo") >= 0) {
+                if (url.indexOf("/wx/code") >= 0 || url.indexOf("/wx/code") >= 0) {
                     const d = cfg.data;
                     if (d && typeof d === "object" && !d.ref) {
                         const ref = _yybRefOf(d.openid || d.openId || d.id || d.account);
