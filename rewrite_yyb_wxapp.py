@@ -70,6 +70,18 @@ def fix_wx_endpoint(content):
         return out
     out = re.sub(r"(?<![?.\w])data\??\.data\??\.code\b", "data?.data?.result?.code || data?.data?.code", out)
     out = re.sub(r"(?<![?.\w])data\.code\b", "data?.data?.result?.code || data?.code", out, count=1)
+    # 取码写法: const result = data?.data || {}; ... result.code
+    # 真实后端 data.data.result.code, 直接 data?.data.code 取不到 -> 改取 result 分支
+    out = re.sub(
+        r"(const\s+result\s*=\s*data\s*\?\.\s*data\s*\|\|\s*\{\}\s*;)",
+        "const result = (data?.data?.result ?? data?.data) || {};",
+        out,
+    )
+    out = re.sub(
+        r"(\bresult\s*=\s*data\s*\?\.\s*data\s*\|\|\s*\{\}\s*;)",
+        "result = (data?.data?.result ?? data?.data) || {};",
+        out,
+    )
     return out
 
 
