@@ -47,6 +47,21 @@ send_qq() {
         exit 0
     fi
     git merge -X ours upstream/main --no-edit 2>&1 || { git merge --abort 2>/dev/null; log "  上游合并冲突,已放弃本次合并(保留本地YYB适配)"; }
+
+    # 1.5 京东净化：上游 smallfawn/QLScriptPublic 自带 jd/、jd_captcha/、qitoqito_psyduck/，
+    #      每次 merge 都会回灌。这里强制清除，确保京东永不进本仓库。
+    log "[1.5/6] 京东净化(防上游回灌)..."
+    JD_HIT=0
+    for jdpath in jd jd_captcha qitoqito_psyduck daily/JDCode.py daily/JDCodeLocal.py wxapp/jdcode.js wxapp/jdbclub.js wxapp/jdyj.js wxapp/jdkd.py; do
+        if [ -e "$jdpath" ]; then rm -rf "$jdpath"; JD_HIT=1; fi
+    done
+    # 通配清除(含 cache/未跟踪)
+    find . -path ./.git -prune -o -iname 'jd_task_*' -print -exec rm -f {} + 2>/dev/null
+    find . -path ./.git -prune -o -iname '*psyduck*' -print -exec rm -rf {} + 2>/dev/null
+    find . -path ./.git -prune -o -iname 'jd_cookie*' -print -exec rm -f {} + 2>/dev/null
+    find . -path ./.git -prune -o -iname 'jd_ck_*' -print -exec rm -f {} + 2>/dev/null
+    [ $JD_HIT -eq 1 ] && log "  上游京东文件已清除" || log "  无京东回灌"
+
     log "  上游已合并: $(git rev-parse --short upstream/main)"
 
     # 2. JS 改写
@@ -76,8 +91,14 @@ send_qq() {
     # 4. 同步改写结果到 git 仓库
     log "[4/6] 同步到仓库..."
     cp -r "$DST_DIR"/* "$REPO/wxapp/" 2>/dev/null
+
+    # 4.5 提交前守卫：任何京东文件企图进入暂存区则中止本次推送
     git add -A
-    if git diff --cached --quiet; then
+    if git diff --cached --name-only | grep -qiE 'jd/|jd_captcha|qitoqito_psyduck|jdcode|jdbclub|jdyj|jdkd|jd_task_|jd_cookie|jd_ck_|psyduck'; then
+        log "  ⛔ 检测到京东文件企图提交，已中止推送！详情："
+        git diff --cached --name-only | grep -iE 'jd|psyduck' | sed 's/^/    /' | tee -a "$LOG"
+        FAILED=1
+    elif git diff --cached --quiet; then
         log "  无改动"
     else
         git commit -m "feat: auto-update $(date +%Y-%m-%d) YYB-Go rewrite" 2>&1

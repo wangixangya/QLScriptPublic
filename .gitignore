@@ -11,3 +11,25 @@ wxapp/*_token_cache.json
 daily/*_token_cache.json
 idp/*_token_cache.json
 json/
+
+# ===== 京东相关永久屏蔽（2026-10-11 用户要求全清，禁止回灌）=====
+# 脚本源码
+jd/
+jd_captcha/
+daily/JDCode.py
+daily/JDCodeLocal.py
+wxapp/jdcode.js
+wxapp/jdcode_token.json
+wxapp/jdbclub.js
+wxapp/jdbclub_token.json
+wxapp/jdyj.js
+wxapp/jdyj_token.json
+wxapp/jdkd.py
+# PsyDuck 任务
+qitoqito_psyduck/
+# 任何含 jd 的散文件通配
+**/*psyduck*
+**/jd_task_*
+**/*_jd_*
+**/jd_ck_*
+**/jd_cookie*
