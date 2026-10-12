@@ -25,6 +25,7 @@ const path = require("path");
 
 const CK_NAME = "mimengshenghuo";
 const APP = { name: "米萌生活", appid: "wx9939a74ee8a8522a" };
+const MINI_APP_ID = APP.appid;
 const GQL_URL = "https://shd.luxingiot.com/graphql";
 const WX_SERVER_URL = (process.env.wx_server_url || "http://172.17.0.1:8000").replace(/\/$/, "");
 const WX_AUTH = process.env.wx_auth || "";
@@ -95,8 +96,8 @@ async function getWxCode(openid) {
       data: { app_id: MINI_APP_ID, ref: _yybRef },
     });
     if (_yybRes.data?.code === 0) {
-      const _yybCode = _yybRes.data?.data?.result?.code || _yybRes.data?.code || "";
-      return { status: 200, data: { code: _yybCode, data: { code: _yybCode } } };
+      const _yybCode = _yybRes.data?.data?.result?.code || _yybRes.data?.data?.code || _yybRes.data?.code || "";
+      return _yybCode;
     }
     throw new Error(`YYB-Go 获取code失败: ${JSON.stringify(_yybRes.data)}`);
   }
