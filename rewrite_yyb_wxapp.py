@@ -35,6 +35,7 @@ def process_js(src_file):
     # 因此在此处(真源)注入，每次同步自动带正确依赖。
     content = fix_wx_endpoint(content)
     content = inject_dependency_shims(content)
+    content = fix_got_require(content)
 
     with open(dst_file, 'w', encoding='utf-8') as f:
         f.write(content)
@@ -209,6 +210,24 @@ function writeCache(obj) {
         content = content[:pos + 1] + shim + content[pos + 1:]
     else:
         content = shim + content
+    return content
+
+
+def fix_got_require(content):
+    """boxjs 旧模板 initGotEnv 用 this.got = this.got ? this.got : require("got")。
+    在 ql2 运行时 require("got") 可能解析到 pnpm global 的 got v16(object, 无 .post, 非 callable),
+    导致 this.got is not a function / this.got.post is not a function。
+    锁定到 scripts/node_modules/got v11(绝对路径, 始终是 callable 且有 .post)。幂等。"""
+    if "/ql/data/scripts/node_modules/got" in content:
+        return content
+    pat = re.compile(
+        r'this\.got\s*=\s*this\.got\s*\?\s*this\.got\s*:\s*require\(\s*["\']got["\']\s*\)')
+    if not pat.search(content):
+        return content
+    content = pat.sub(
+        'this.got = (typeof this.got === "function" && typeof this.got.post === "function") '
+        '? this.got : require("/ql/data/scripts/node_modules/got")',
+        content)
     return content
 
 
