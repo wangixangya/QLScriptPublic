@@ -254,7 +254,7 @@ async function wxServerCode(openid, appid) {
       validateStatus: () => true,
     }
   );
-  if (!data?.status) throw new Error(data?.message || "wx_server 获取 code 失败");
+  if (!(data?.status || Number(data?.code) === 0)) throw new Error(data?.message || "wx_server 获取 code 失败");
   const code = data?.data?.result?.code || data?.data?.code || data?.data?.result?.code || data?.code;
   if (!code) throw new Error(`wx_server 未返回 code: ${JSON.stringify(data)}`);
   return code;

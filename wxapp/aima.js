@@ -188,7 +188,7 @@ async function getWxCode(account) {
     }
   );
 
-  const code = res.data?.code || res.data?.data?.code;
+  const code = res.data?.data?.result?.code || res.data?.data?.code || res.data?.code;
   if (res.status !== 200 || !code) {
     throw new Error(`获取code失败: HTTP ${res.status} ${JSON.stringify(res.data)}`);
   }

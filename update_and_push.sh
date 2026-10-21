@@ -85,6 +85,14 @@ send_qq() {
         log "  JS 取码适配失败"; FAILED=1
     fi
 
+    # 3c. /wx/code 响应形状修补：yyb-go 返回 {code:0,data:{result:{code}}}，
+    #      上游脚本多按旧 wx_server 形状(status/data.code)解析，会误报"未返回code"
+    log "[3c/6] /wx/code 响应形状修补..."
+    (cd "$SCRIPT_DIR" && python3 patch_wxcode_shape.py) 2>&1 | tail -5
+    if [ ${PIPESTATUS[0]} -ne 0 ]; then
+        log "  /wx/code 形状修补失败"; FAILED=1
+    fi
+
     JS_COUNT=$(ls "$DST_DIR"/*.js 2>/dev/null | wc -l)
     PY_COUNT=$(ls "$DST_DIR"/*.py 2>/dev/null | wc -l)
 

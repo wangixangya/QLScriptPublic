@@ -113,6 +113,15 @@ function parseAccount(raw) {
     } catch {}
   }
 
+  // YYB-Go 账号行 "server@ref"（ref 即 openid）；getCode 需要整行由 wcs.js 路由
+  const at = text.indexOf("@");
+  if (at > 0) {
+    const host = text.slice(0, at).replace(/^https?:\/\//, "");
+    if (/^[a-z0-9.-]+:\d+$/i.test(host) && text.slice(at + 1).trim()) {
+      return { openid: text.slice(at + 1).trim(), token: "" };
+    }
+  }
+
   for (const sep of ["#", "|"]) {
     if (text.includes(sep)) {
       const [openid, ...rest] = text.split(sep);
@@ -238,7 +247,9 @@ function isCompleted(task = {}) {
 class Task {
   constructor(raw) {
     this.index = $.userIdx++;
-    const account = parseAccount(raw);
+    this.raw = String(raw || "").trim();
+    const account = parseAccount(this.raw);
+    this.codeArg = this.raw.includes("@") ? this.raw : (account.openid || this.raw);
     this.openid = account.openid;
     this.token = account.token || "";
     this.member = {};
@@ -271,7 +282,7 @@ class Task {
 
   async getWxCode() {
     if (!this.openid) throw new Error("缺少 openid，无法自动登录");
-    const { data } = await wechat.getCode(this.openid);
+    const { data } = await wechat.getCode(this.codeArg);
     if (!data?.status) throw new Error(data?.message || "wx_server 获取 code 失败");
     const code = data.data?.code || data.code;
     if (!code) throw new Error(`wx_server 未返回 code: ${JSON.stringify(data)}`);
@@ -325,7 +336,7 @@ class Task {
     if (!this.openid) throw new Error("缺少 openid，无法登录 garden");
     const pick = (d) => d?.data?.code || d?.code;
 
-    const r1 = await gardenWechat.getCode(this.openid);
+    const r1 = await gardenWechat.getCode(this.codeArg);
     if (!r1?.data?.status) throw new Error(`取 garden code 失败: ${r1?.data?.message || "未知"}`);
     const sess = await request("get", MAIN_BASE, "/auth/session", {
       params: { code: pick(r1.data) },
@@ -333,7 +344,7 @@ class Task {
     });
     const loginCode = (sess?.data || {}).login_code || "";
 
-    const r2 = await gardenWechat.getCode(this.openid);
+    const r2 = await gardenWechat.getCode(this.codeArg);
     if (!r2?.data?.status) throw new Error(`取 garden code 失败: ${r2?.data?.message || "未知"}`);
     const auth = await request("get", GARDEN_BASE, "/garden/wechat/login", {
       params: { code: pick(r2.data) },

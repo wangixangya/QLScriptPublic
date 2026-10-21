@@ -235,7 +235,7 @@ class Task {
             },
         );
         const result = (data?.data?.result ?? data?.data) || {};
-        if (!data?.status || !result.code) {
+        if (!(data?.status || Number(data?.code) === 0) || !result.code) {
             throw new Error(`wx_server 未返回code: ${JSON.stringify(data)}`);
         }
         return result;

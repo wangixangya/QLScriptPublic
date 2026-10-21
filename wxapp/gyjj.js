@@ -235,7 +235,7 @@ class Task {
             validateStatus: () => true,
         });
         const result = (data?.data?.result ?? data?.data) || {};
-        if (!data?.status || !result.code) throw new Error(`wx_server 未返回code: ${JSON.stringify(data)}`);
+        if (!(data?.status || Number(data?.code) === 0) || !result.code) throw new Error(`wx_server 未返回code: ${JSON.stringify(data)}`);
         let userInfo = {};
         try {
             userInfo = JSON.parse(result.data || "{}");
